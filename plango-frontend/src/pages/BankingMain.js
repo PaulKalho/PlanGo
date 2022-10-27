@@ -1,7 +1,9 @@
+import { Breadcrumbs } from "@material-tailwind/react";
 import React, {useEffect, useState} from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import axiosInstance from "../axios";
 import TransactionList from "../components/cashapp/TransactionList";
+import NavbarMain from "../components/main/NavbarMain";
 
 function BankingMain() {
 
@@ -46,19 +48,26 @@ function BankingMain() {
         }
         fetchData()
     }, []);
-
-    if(loading) {
-        return(
-            <h1>LOADING...</h1>
-        )
-    }else {
-        return(
-            <div>
+    return (
+        <div>
+            <NavbarMain />
             {/* GET ID FROM URL AND MACHE REQUEST */}
-                <TransactionList transactions={transactions} />
-            </div>
-        )
-    }
+            <Breadcrumbs className="bg-transparent">
+                <Link 
+                    className="hover:underline bg-transparent"
+                    to="/dashboard/cash/accounts/"
+                >
+                    Accounts wählen
+                </Link>
+                <Link                        
+                    className="hover:underline font-bold"
+                >
+                    Transaktionen
+                </Link>
+            </Breadcrumbs>
+            <TransactionList transactions={transactions} loading={loading} />
+        </div>
+    )
 
 };
 

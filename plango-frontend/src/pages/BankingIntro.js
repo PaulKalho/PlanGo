@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import BankInput from "./BankInput";
 import LinkIframe from "../components/cashapp/LinkIframe";
+import NavbarMain from "../components/main/NavbarMain";
 
 function BankingIntro() {
 
@@ -16,7 +17,8 @@ function BankingIntro() {
 
   return (
     <div className="grid h-screen place-items-center">
-          {componentList[page]}
+        <NavbarMain />
+        {componentList[page]}
     </div>
   )
 };

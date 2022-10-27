@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react"
 import axiosInstance from "../axios";
 import AsyncSelect from 'react-select';
 import { Button } from "@material-tailwind/react";
+import NavbarMain from "../components/main/NavbarMain";
 
 
 function BankInput ({page, setPage, setLink}) {
@@ -72,13 +73,13 @@ function BankInput ({page, setPage, setLink}) {
 }
 
   return (
-    <div className="grid h-screen w-full place-items-center">
-      <div className="w-1/3 flex flex-col gap-4 border-2 rounded-lg py-14 px-4">
-          <h1>Suchen Sie sich eine Bank aus</h1>
-          <AsyncSelect options={options} isLoading={loading} onChange={handleChange} />
-          <Button type="submit" onClick={handleSubmit}>Weiter</Button>
+      <div className="grid h-screen w-full place-items-center">
+        <div className="w-1/3 flex flex-col gap-4 border-2 rounded-lg py-14 px-4">
+            <h1>Suchen Sie sich eine Bank aus</h1>
+            <AsyncSelect options={options} isLoading={loading} onChange={handleChange} />
+            <Button type="submit" onClick={handleSubmit}>Weiter</Button>
+        </div>
       </div>
-    </div>
   )
 };
 

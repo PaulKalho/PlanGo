@@ -1,8 +1,8 @@
 import React from "react"
 
-function LinkIframe ({page, setPage, link}) {
+function LinkIframe () {
   return (
-    <div>
+    <div className="grid h-screen w-full place-items-center">
       <h1>Sie werden weitergeleitet...</h1>
     </div>
   )
