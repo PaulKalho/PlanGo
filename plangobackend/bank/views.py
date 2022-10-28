@@ -1,8 +1,10 @@
-import re
-from rest_framework.views import APIView  
+from email import message
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes
 from .models import Credentials
+from .ResponseException import ResponseException
+
 
 import requests
 import json
@@ -15,11 +17,10 @@ SECRET_ID = "e10060ad-1436-4c63-8719-cd3d7a1adbe2"
 SECRET_KEY = "7cc8ebd4394bad3d790b451810d442e714b6129bdacf072ec83ebb9c2c1edfe8b94b16764d8acb8c25cb985a5e6e5cdd02e47bb4cb73fc6b39d1045c70601d23"
 REDIRECT_URI = "http://localhost:3000/dashboard/cash/accounts/"
 
-
 @api_view(('GET',))
 def get_bank(request):
         # results = self.request.query_params.get('type')
-        response = {}
+        response = Response()
 
         dataS = {
             "secret_id": SECRET_ID,
@@ -48,24 +49,36 @@ def get_bank(request):
             r_status = r.status_code
             
             if r_status == 200:
-                response['status'] = r.status_code
-                response['message'] = 'success'
-                response['banks'] = r.json()
+                content = r.json()
+                response = Response(data=content, status=status.HTTP_200_OK)
+                # response['status'] = r.status_code
+                # response['message'] = 'success'
+                # response['banks'] = r.json()
+            elif r_status == 401:
+                err = "Der Auth-Token ist abgelaufen!" 
+                response = Response(data=err, status=status.HTTP_401_UNAUTHORIZED)
+                # response['status'] = r.status_code
+                # response['message'] = 'error'
+                # response['credentials'] = {}
+            elif r_status == 403:
+                err = "Da ist ein Fehler auf unserer Seite aufgetreten. (IP-Denied)"
+                response = Response(data=err, status=status.HTTP_403_FORBIDDEN)
+            elif r_status == 404:
+                err = "Not found?!"
+                response = Response(data=err, status=status.HTTP_404_NOT_FOUND)
             else:
-                response['status'] = r.status_code
-                response['message'] = 'error'
-                response['credentials'] = {}
+                err = "Irgendwetwas ist schiefgelaufen!"
+                response = Response(data=err, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            response['status'] = r.status_code
-            response['message'] = 'error'
-            response['credentials'] = {}
+            err = "Irgendetwas ist schiefgelaufen"
+            response = Response(data = err, status=status.HTTP_400_BAD_REQUEST)
     
-        return Response(response)
+        return response
 
 @api_view(('POST',))
 def get_link(request):
-    response = {}
+    response = Response()
 
     #Headers auth headers (access token)
     headers = {
@@ -94,15 +107,25 @@ def get_link(request):
         model.institution = data["id"]
         model.save()
 
-        response['status'] = r.status_code
-        response['message'] = 'success'
-        response['credentials'] = data["link"]
-    else:
-        response['status'] = r.status_code
-        response['message'] = 'error'
-        response['credentials'] = {}
+        content = data["link"]
+        response = Response(data = content, status=status.HTTP_200_OK)
+        # response['status'] = r.status_code
+        # response['message'] = 'success'
+        # response['credentials'] = data["link"]
+    elif r_status == 401:
+        err = "Abgelaufener Token"
+        response = Response(data = err, status=status.HTTP_401_UNAUTHORIZED)
+    elif r_status == 403:
+        err = "Da ist ein Fehler auf unserer Seite aufgetreten. (IP-Denied)"
+        response = Response(data = err, status=status.HTTP_403_FORBIDDEN)
+        # response['status'] = r.status_code
+        # response['message'] = 'error'
+        # response['credentials'] = {}
+    else: 
+        err = "Irgendetwas ist schiefgelaufen"
+        response = Response(data = err, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(response)
+    return response
 
 @api_view(('POST',))
 def list_accounts(request):
@@ -123,7 +146,7 @@ def list_accounts(request):
         # Response = Transactions Endpoint etc.
 
     access_token = request.session['access_token']
-    response = {}
+    response = Response()
 
     #Headers auth headers (access token)
     headers = {
@@ -150,20 +173,33 @@ def list_accounts(request):
         row.accounts = data["accounts"]
         row.save()
 
-        response['status'] = r.status_code
-        response['message'] = 'success'
-        response['accounts'] = len(data["accounts"])
+        content = len(data["accounts"])
+        response = Response(data=content, status=status.HTTP_200_OK)
+        # response['status'] = r.status_code
+        # response['message'] = 'success'
+        # response['accounts'] = len(data["accounts"])
+    elif r_status == 400:
+        err = "Falsche ID"
+        response = Response(data=err, status=status.HTTP_400_BAD_REQUEST)
+    elif r_status == 401:
+        err = "Der Token ist abgelaufen"
+        response = Response(data=err, status=status.HTTP_401_UNAUTHORIZED)
+    elif r_status == 403:
+        err = "Die IP ist falsch"
+        response = Response(data=err, stauts=status.HTTP_403_FORBIDDEN)
     else:
+        err = "Irgendetwas ist schiefgelaufen"
+        response = Response(data=err, status=status.HTTP_400_BAD_REQUEST)
         response['status'] = r.status_code
         response['message'] = 'error'
         response['credentials'] = {}
 
-    return Response(response)
+    return response
 
 @api_view(('POST',))
 def list_transactions(request):
     access_token = request.session['access_token']
-    response = {}
+    response = Response()
 
     #Headers auth headers (access token)
     headers = {
@@ -177,6 +213,7 @@ def list_transactions(request):
     id = request.data["id"]
     user = request.data["user"]
 
+
     row = Credentials.objects.get(user=user)
     accounts = row.accounts
 
@@ -189,16 +226,12 @@ def list_transactions(request):
     r_status = r.status_code
 
     if r_status == 200:
-        data = r.json()
-
-        response['status'] = r.status_code
-        response['message'] = 'success'
-        response['transactions'] = data
+        content = r.json()
+        response = Response(data=content, status=status.HTTP_200_OK)
+        # response['status'] = r.status_code
+        # response['message'] = 'success'
+        # response['transactions'] = data
     else:
-        response['status'] = r.status_code
-        response['message'] = 'error'
-        response['credentials'] = {}
+        raise ResponseException(status_code=r_status)
 
-    return Response(response)
-
-
+    return response

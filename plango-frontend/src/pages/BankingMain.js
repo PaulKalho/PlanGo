@@ -23,11 +23,11 @@ function BankingMain() {
             try {
                 setLoading(true)
                 await axiosInstance.post("api/bank/transactions/", payload).then((res) => {
-                    console.log(res.data.transactions);
+                    console.log(res.data.transactions.booked);
                     //setTransactions(res.data.transactions)
                     //console.log(transactions)
 
-                    let resultBooked = res.data.transactions.transactions.booked
+                    let resultBooked = res.data.transactions.booked
                     resultBooked.map((transaction) => {
                         arr.push({
                             date: transaction.bookingDate,
