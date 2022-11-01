@@ -1,4 +1,5 @@
 from email import message
+from wsgiref import headers
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes
@@ -8,14 +9,10 @@ from .ResponseException import ResponseException
 
 import requests
 import json
+import os
+
 # def getTokens():
 #     #Hier sollen die access und refresh tokens von nordigen abgefragt werden
-
-# Bitte CONST noch überarbeiten
-
-SECRET_ID = "e10060ad-1436-4c63-8719-cd3d7a1adbe2"
-SECRET_KEY = "7cc8ebd4394bad3d790b451810d442e714b6129bdacf072ec83ebb9c2c1edfe8b94b16764d8acb8c25cb985a5e6e5cdd02e47bb4cb73fc6b39d1045c70601d23"
-REDIRECT_URI = "http://localhost:3000/dashboard/cash/accounts/"
 
 @api_view(('GET',))
 def get_bank(request):
@@ -23,8 +20,8 @@ def get_bank(request):
         response = Response()
 
         dataS = {
-            "secret_id": SECRET_ID,
-            "secret_key": SECRET_KEY
+            "secret_id": os.environ.get("NORDIGEN_SECRET_ID"),
+            "secret_key": os.environ.get("NORDIGEN_SECRET_KEY")
         }
 
         #Make request tokens
@@ -41,7 +38,7 @@ def get_bank(request):
 
             #Now use them to get banks
             headers = {
-                "Authorization": "Bearer " + data["access"]
+                "Authorization": "Bearer " + data["access"] 
             }
 
             #Make request Banks
@@ -51,28 +48,10 @@ def get_bank(request):
             if r_status == 200:
                 content = r.json()
                 response = Response(data=content, status=status.HTTP_200_OK)
-                # response['status'] = r.status_code
-                # response['message'] = 'success'
-                # response['banks'] = r.json()
-            elif r_status == 401:
-                err = "Der Auth-Token ist abgelaufen!" 
-                response = Response(data=err, status=status.HTTP_401_UNAUTHORIZED)
-                # response['status'] = r.status_code
-                # response['message'] = 'error'
-                # response['credentials'] = {}
-            elif r_status == 403:
-                err = "Da ist ein Fehler auf unserer Seite aufgetreten. (IP-Denied)"
-                response = Response(data=err, status=status.HTTP_403_FORBIDDEN)
-            elif r_status == 404:
-                err = "Not found?!"
-                response = Response(data=err, status=status.HTTP_404_NOT_FOUND)
             else:
-                err = "Irgendwetwas ist schiefgelaufen!"
-                response = Response(data=err, status=status.HTTP_400_BAD_REQUEST)
-
+                raise ResponseException(status_code=r_status)
         else:
-            err = "Irgendetwas ist schiefgelaufen"
-            response = Response(data = err, status=status.HTTP_400_BAD_REQUEST)
+            raise ResponseException(status_code=r_status)
     
         return response
 
@@ -88,7 +67,7 @@ def get_link(request):
     #Data to send
     #TODO: User mitsenden hier her ans frontend
     payload = {
-        "redirect": REDIRECT_URI,
+        "redirect": os.environ.get("REDIRECT_URI"),
         "institution_id": request.data["institution_id"],
     }
 
@@ -103,28 +82,16 @@ def get_link(request):
 
         #Save id from requisitions in DB, we need it to get the accounts in list_accounts()
         model = Credentials()
-        model.user = request.data["user"]
+        model.user = request.user
         model.institution = data["id"]
         model.save()
 
-        content = data["link"]
-        response = Response(data = content, status=status.HTTP_200_OK)
-        # response['status'] = r.status_code
-        # response['message'] = 'success'
-        # response['credentials'] = data["link"]
-    elif r_status == 401:
-        err = "Abgelaufener Token"
-        response = Response(data = err, status=status.HTTP_401_UNAUTHORIZED)
-    elif r_status == 403:
-        err = "Da ist ein Fehler auf unserer Seite aufgetreten. (IP-Denied)"
-        response = Response(data = err, status=status.HTTP_403_FORBIDDEN)
-        # response['status'] = r.status_code
-        # response['message'] = 'error'
-        # response['credentials'] = {}
-    else: 
-        err = "Irgendetwas ist schiefgelaufen"
-        response = Response(data = err, status=status.HTTP_400_BAD_REQUEST)
 
+        content = data["link"], 
+        response = Response(data = content, status=status.HTTP_200_OK)
+    else:
+        raise ResponseException(status_code=r_status)
+        
     return response
 
 @api_view(('POST',))
@@ -154,7 +121,7 @@ def list_accounts(request):
     }
 
     #Get id from db
-    user = request.data["user"]
+    user = request.user
     row = Credentials.objects.get(user=user)
     id = row.institution
     
@@ -167,7 +134,7 @@ def list_accounts(request):
 
     #Handle token response
     if r_status == 200:
-        #This Data holds the access as well as the refresh tokens
+        #This Data holds the accounts
         data = r.json()
         #Add accounts array to DB
         row.accounts = data["accounts"]
@@ -175,24 +142,8 @@ def list_accounts(request):
 
         content = len(data["accounts"])
         response = Response(data=content, status=status.HTTP_200_OK)
-        # response['status'] = r.status_code
-        # response['message'] = 'success'
-        # response['accounts'] = len(data["accounts"])
-    elif r_status == 400:
-        err = "Falsche ID"
-        response = Response(data=err, status=status.HTTP_400_BAD_REQUEST)
-    elif r_status == 401:
-        err = "Der Token ist abgelaufen"
-        response = Response(data=err, status=status.HTTP_401_UNAUTHORIZED)
-    elif r_status == 403:
-        err = "Die IP ist falsch"
-        response = Response(data=err, stauts=status.HTTP_403_FORBIDDEN)
     else:
-        err = "Irgendetwas ist schiefgelaufen"
-        response = Response(data=err, status=status.HTTP_400_BAD_REQUEST)
-        response['status'] = r.status_code
-        response['message'] = 'error'
-        response['credentials'] = {}
+        raise ResponseException(status_code=r_status)
 
     return response
 
@@ -211,7 +162,7 @@ def list_transactions(request):
         #Get row from model
         #get account-id
     id = request.data["id"]
-    user = request.data["user"]
+    user = request.user
 
 
     row = Credentials.objects.get(user=user)
@@ -228,10 +179,40 @@ def list_transactions(request):
     if r_status == 200:
         content = r.json()
         response = Response(data=content, status=status.HTTP_200_OK)
-        # response['status'] = r.status_code
-        # response['message'] = 'success'
-        # response['transactions'] = data
     else:
         raise ResponseException(status_code=r_status)
 
     return response
+
+@api_view(('GET', ))
+def check_accounts(request):
+    # TODO raise exception wenn user not found
+    access_token = request.session["access_token"]
+    response = Response()
+
+    headers = {
+        "Authorization": "Bearer " + access_token
+    }
+
+    #Get id from db
+    user = request.user
+    row = Credentials.objects.get(user=user)
+    id = row.institution
+
+    #Get Accounts
+    url = "https://ob.nordigen.com/api/v2/requisitions/" + id + "/"
+
+    r = requests.get(url, headers=headers)
+    r_status = r.status_code
+
+    if r_status == 200:
+        #This Data holds the accounts
+        data = r.json()
+
+        content = { "accounts": len(data["accounts"]) }
+        response = Response(data=content, status=status.HTTP_200_OK)
+    else:
+        raise ResponseException(status_code=r_status)
+
+    return response
+    

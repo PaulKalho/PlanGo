@@ -6,7 +6,7 @@ import React from "react"
 
 const PrivateRoutes = ({children, ...rest}) => {
     let auth = {'token': false}
-    if(localStorage.getItem('access_token')) {
+    if(localStorage.getItem('access')) {
         auth.token = true;
     }else {
         auth.token = false;

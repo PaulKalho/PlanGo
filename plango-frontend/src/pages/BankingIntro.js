@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import BankInput from "./BankInput";
 import LinkIframe from "../components/cashapp/LinkIframe";
 import NavbarMain from "../components/main/NavbarMain";
@@ -7,7 +7,6 @@ function BankingIntro() {
 
   const [page, setPage] = useState(0)
   const [link, setLink] = useState("");
-
 
   const componentList = [
     <BankInput page={page} setPage={setPage} setLink={setLink}/>,

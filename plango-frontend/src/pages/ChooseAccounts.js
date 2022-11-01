@@ -14,13 +14,10 @@ function ChooseAccount () {
     useEffect(() => {
         const fetchData = async () => {
 
-          const payload = {
-            "user": "tester"
-          }
         //   const arr = [];
           try {
             setLoading(true)
-            await axiosInstance.post("api/bank/accounts/", payload).then((res) => {
+            await axiosInstance.post("api/bank/accounts/").then((res) => {
               console.log(res)
               
               setAmount(res.data)

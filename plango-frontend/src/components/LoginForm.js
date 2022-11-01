@@ -24,17 +24,17 @@ function LoginForm() {
         console.log(formData);
 
         axiosInstance
-            .post(`token/`, {
+            .post(`auth/jwt/create/`, {
                 email: formData.email,
                 password: formData.password,
             })
             .then((res) => {
-                console.log(res);
-                localStorage.setItem('access_token', res.data.access);
-                localStorage.setItem('refresh_token', res.data.refresh);
+                console.log(res.data);
+                localStorage.setItem('access', res.data.access);
+                localStorage.setItem('refresh', res.data.refresh);
 
                 axiosInstance.defaults.headers['Authorization'] = 
-                    'JWT' + localStorage.getItem('access_token');
+                    'Bearer ' + localStorage.getItem('access');
 
                 navigate('/dashboard');
             })

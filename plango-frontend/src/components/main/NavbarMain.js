@@ -21,8 +21,8 @@ function NavbarMain() {
 
 
     const logout = (e) => {
-        localStorage.removeItem("access_token")
-        localStorage.removeItem("refresh_token")
+        localStorage.removeItem("access")
+        localStorage.removeItem("refresh")
         
         axiosInstance.defaults.headers['Authorization'] = "";
 

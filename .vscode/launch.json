@@ -8,13 +8,23 @@
             "name": "Python: Aktuelle Datei",
             "type": "python",
             "request": "launch",
+            "stopOnEntry": false,
             "program": "plangobackend/manage.py",
             "args": [
                 "runserver",
+                "localhost:8080",
+                "--no-color",
+                "--noreload"
             ],
             "django": true,
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "debugOptions": [
+                "WaitOnAbnormalExit",
+                "WaitOnNormalExit",
+                "RedirectOutput",
+                "DjangoDebugging"
+            ]
         }
     ]
 }

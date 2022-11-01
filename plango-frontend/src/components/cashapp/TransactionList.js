@@ -1,6 +1,7 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { BsThreeDotsVertical } from "react-icons/bs"
 import GridLoader from "react-spinners/GridLoader"
+import Dropdown from "../../utils/Dropdown"
 
 function TransactionList ({transactions , loading}) {
 
@@ -27,7 +28,9 @@ function TransactionList ({transactions , loading}) {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.date}</td>
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.creditor}</td>
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value}</td>
-                                    <td><BsThreeDotsVertical /></td>
+                                    <td>
+                                        <Dropdown />        
+                                    </td>
                                 </tr>
                             )
                         })

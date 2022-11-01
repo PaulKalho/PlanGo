@@ -9,8 +9,8 @@ function BankInput ({page, setPage, setLink}) {
   const [options, setOptions] = useState([""]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
-  
   useEffect(() => {
+
     const fetchData = async () => {
       const arr = [];
       try {
@@ -31,7 +31,9 @@ function BankInput ({page, setPage, setLink}) {
       setLoading(false)
       
     }
+    
 
+    // isAuthBank()
     fetchData()
   }, []);
 
@@ -55,7 +57,6 @@ function BankInput ({page, setPage, setLink}) {
 
     let payload = {
       "institution_id": selected.institution_id,
-      "user": "tester"
     }
 
     // console.log(payload)
@@ -64,8 +65,8 @@ function BankInput ({page, setPage, setLink}) {
         .post (`api/bank/link/`, payload)
         .then((res) => {
             setPage(page + 1);
-            setLink(res.data.credentials)
-            window.location.replace(res.data.credentials)
+            setLink(res.data)
+            window.location.replace(res.data)
             console.log(res.data);
         })
         .catch(err => {

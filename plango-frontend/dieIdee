@@ -1,0 +1,11 @@
+Also:
+
+BankingIdee:
+-Jeden Monat soll die Fixe/Variable Einnahme markiert werden
+-Die Fixen Ausgaben jeden Monat werden anfangs festgelegt, Einnahmen jedoch nur beim ersten Eintritt in die App
+
+-Dann wird mit den Infos gearbeitet: 
+    -Also: Wie viel Geld bleibt übrig am Ende
+           -Durchschnittsausgaben am Tag (aktuell und insgesamt) für Statistik
+           -Wie viel Budget pro Tag ist noch verfügbar
+    -Kategorisierung der Ausgaben -> muss User immer aktuell machen für Statistik
