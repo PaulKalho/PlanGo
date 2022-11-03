@@ -24,7 +24,7 @@ function TransactionList ({transactions , loading}) {
                             return new Date(b.bookingDate) - new Date(a.bookingDate);
                         }).map(item => {
                             return(
-                                <tr className="bg-white border-b transition duration-300 ease-in-out hover:bg-gray-100">
+                                <tr className={`${item.marked ? 'bg-green-700' : 'bg-white border-b transition duration-300 ease-in-out hover:bg-grey-100'}`}>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.date}</td>
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.creditor}</td>
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value}</td>

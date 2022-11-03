@@ -9,6 +9,7 @@ from marshmallow import Schema, fields
 
 # Parse Transaction Class:
 from .ParseTransactions import ParseTransaction
+from cashapp.models import FixAusgaben
 
 import requests
 import json
@@ -33,6 +34,7 @@ def parseTransactions(transactions):
         mandateId = fields.String()  
         creditorIban = fields.Str()
         debtorIban = fields.Str()
+        marked = fields.Bool()
         
     schema = TransactionSchema()
     
@@ -47,13 +49,27 @@ def parseTransactions(transactions):
         else:
             mandateId = None
 
-        #IBAN evtl hinzufügen als wiedererkennungswert
-        obj = ParseTransaction(transaction.get("bookingDate"), transaction.get("creditorName"), transaction.get("debtorName"), transaction["transactionAmount"]["amount"], mandateId, transaction["creditorAccount"]["iban"], transaction["debtorAccount"]["iban"])
+        # Call checkFixOutcome here with transaction.
+        marked = checkFixOutcome(transaction)
+
+        obj = ParseTransaction(transaction.get("bookingDate"), transaction.get("creditorName"), transaction.get("debtorName"), transaction["transactionAmount"]["amount"], mandateId, transaction["creditorAccount"]["iban"], transaction["debtorAccount"]["iban"], marked)
         result = schema.dump(obj.__dict__)
 
         final.append(result)
 
     return final
+
+def checkFixOutcome(transaction):
+    # This Function checks if @param transaction is in database fixOutcome. If yes @return True else @return False
+    fixOutcome = FixAusgaben.objects.all()
+
+    for obj in fixOutcome:
+        # Hier die Logik wie transaktionen prüfen ob fixOutcome -> Nochmal nachdenken
+        if(obj.mandate_id == transaction.get("mandateId")):
+            return True   
+    
+    return False
+
 
 
 @api_view(('GET',))
@@ -222,6 +238,10 @@ def list_transactions(request):
         content = r.json()
         #Parse Response(transaction) and only give important info back to frontend
         content = parseTransactions(content) # This is a json array: [{},{},{}]
+        # Hier muss nun die Logik angesetzt werden, um content nach Einträgen in cashapp.model.fixAusgaben zu filtern
+        # Wenn diese gefunden werden, muss das dem frontend irgendwie mitgeteilt werden
+        # function checkfixAusg(...), write in content (maybe as param)
+
         response = Response(data=content, status=status.HTTP_200_OK)
     else:
         raise ResponseException(status_code=r_status)

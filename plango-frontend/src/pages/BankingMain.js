@@ -30,13 +30,14 @@ function BankingMain() {
                     console.log(resultBooked);
                     resultBooked.map((resultBooked) => {
                         arr.push({
-                            date: resultBooked.bookingDate,
+                            date: resultBooked.date,
                             creditor: resultBooked.creditor,
                             debitor: resultBooked.debitor,
                             creditorIban: resultBooked.creditorIban,
                             debtorIban: resultBooked.debtorIban,
-                            value: resultBooked.amount,
-                            mandateId: resultBooked.mandateId
+                            value: resultBooked.value,
+                            mandateId: resultBooked.mandateId,
+                            marked: resultBooked.marked
                         }) 
 
                         setTransactions(arr);

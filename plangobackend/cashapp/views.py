@@ -16,7 +16,6 @@ class CashAppView(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         #Save new entry
-        
         serializer.save(created_by = self.request.user)
 
 
