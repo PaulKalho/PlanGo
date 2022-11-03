@@ -29,7 +29,7 @@ function TransactionList ({transactions , loading}) {
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.creditor}</td>
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value}</td>
                                     <td>
-                                        <Dropdown />        
+                                        <Dropdown transaction={item} />        
                                     </td>
                                 </tr>
                             )

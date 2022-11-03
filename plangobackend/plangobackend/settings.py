@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'djoser',
 
     'bank',
-    'users'
+    'users',
+    'cashapp',
 ]
 
 REST_FRAMEWORK = {

@@ -23,16 +23,20 @@ function BankingMain() {
             try {
                 setLoading(true)
                 await axiosInstance.post("api/bank/transactions/", payload).then((res) => {
-                    console.log(res.data.transactions.booked);
-                    //setTransactions(res.data.transactions)
-                    //console.log(transactions)
+                    console.log(res.data);
+                    // let data_array = res.data;
 
-                    let resultBooked = res.data.transactions.booked
-                    resultBooked.map((transaction) => {
+                    let resultBooked = res.data
+                    console.log(resultBooked);
+                    resultBooked.map((resultBooked) => {
                         arr.push({
-                            date: transaction.bookingDate,
-                            creditor: transaction.creditorName,
-                            value: transaction.transactionAmount.amount,
+                            date: resultBooked.bookingDate,
+                            creditor: resultBooked.creditor,
+                            debitor: resultBooked.debitor,
+                            creditorIban: resultBooked.creditorIban,
+                            debtorIban: resultBooked.debtorIban,
+                            value: resultBooked.amount,
+                            mandateId: resultBooked.mandateId
                         }) 
 
                         setTransactions(arr);

@@ -4,7 +4,7 @@ const baseURL = process.env.REACT_APP_BASE_URL
 
 const axiosInstance = axios.create({
     baseURL: baseURL,
-    timeout: 10000,
+    timeout: 100000,
 	withCredentials: true,
     headers: {
         Authorization: localStorage.getItem('access')

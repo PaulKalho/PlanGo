@@ -5,7 +5,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, renderer_classes
 from .models import Credentials
 from .ResponseException import ResponseException
+from marshmallow import Schema, fields
 
+# Parse Transaction Class:
+from .ParseTransactions import ParseTransaction
 
 import requests
 import json
@@ -13,6 +16,45 @@ import os
 
 # def getTokens():
 #     #Hier sollen die access und refresh tokens von nordigen abgefragt werden
+
+def parseTransactions(transactions):
+    # @param transaction = raw transaction data from nordigen
+    # Parse JSON and only transfere important Data
+
+    final = [] # Used for Final JSON-Array
+
+    #This class as well as schema is used to json-"serialize", the data we get from the request and make it to a json-Array
+    #See the marshmallow-dependency documentation
+    class TransactionSchema(Schema):
+        date = fields.Str() # Vllt zu DateField ändern???? NOCH STRING:
+        creditor = fields.Str()
+        debitor = fields.Str()
+        value = fields.Decimal()
+        mandateId = fields.String()  
+        creditorIban = fields.Str()
+        debtorIban = fields.Str()
+        
+    schema = TransactionSchema()
+    
+    # Only work with booked Data
+    booked = transactions["transactions"]["booked"]
+
+    for transaction in booked:
+        #EVTL. statt madateID einfach IBAN nutzen, PROBLEM: Creditor and Debtor
+        #Check if mandateId is empty, if yes, then object mandateId should stay empty
+        if transaction.get("mandateId") != None and transaction.get("mandateId") != "OFFLINE":
+            mandateId = transaction.get("mandateId")
+        else:
+            mandateId = None
+
+        #IBAN evtl hinzufügen als wiedererkennungswert
+        obj = ParseTransaction(transaction.get("bookingDate"), transaction.get("creditorName"), transaction.get("debtorName"), transaction["transactionAmount"]["amount"], mandateId, transaction["creditorAccount"]["iban"], transaction["debtorAccount"]["iban"])
+        result = schema.dump(obj.__dict__)
+
+        final.append(result)
+
+    return final
+
 
 @api_view(('GET',))
 def get_bank(request):
@@ -178,6 +220,8 @@ def list_transactions(request):
 
     if r_status == 200:
         content = r.json()
+        #Parse Response(transaction) and only give important info back to frontend
+        content = parseTransactions(content) # This is a json array: [{},{},{}]
         response = Response(data=content, status=status.HTTP_200_OK)
     else:
         raise ResponseException(status_code=r_status)

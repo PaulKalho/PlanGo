@@ -1,10 +1,32 @@
 import React, { useState } from "react"
+import axiosInstance from '../axios';
+import TransactionList from "../components/cashapp/TransactionList";
 
-function Dropdown () {
+function Dropdown ({transaction}) {
     const[isActive, setIsActive] = useState(false)
 
     const handleClick = () => {
         setIsActive(!isActive);
+    }
+
+    const handleSetOutgoings = (e) => {
+        // Eine neue Fixausgabe in Datenbank hinterlegen
+        e.preventDefault();
+        let name;
+
+        let payload = {
+            name: name,
+            amount: transaction.value, 
+            mandateId: transaction.mandateId,
+            creditorIBAN: transaction.creditorIban,
+            debtorIBAN: transaction.debtorIban,
+        }
+
+        axiosInstance
+            .post("/api/cashapp/", payload)
+            .then((res) => {
+                console.log(res);
+            })
     }
 
   return (
@@ -21,7 +43,7 @@ function Dropdown () {
             <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
             <div className="py-1" role="none">
                 <a href="#" className="text-gray-700 hover:bg-black block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-0">Monatl. Einname markieren</a>
-                <a href="#" className="text-gray-700 hover:bg-black block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Monatl. Ausgabe markieren</a>
+                <a onClick={handleSetOutgoings} className="text-gray-700 hover:bg-black block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Monatl. Ausgabe markieren</a>
                 <a href="#" className="text-gray-700 hover:bg-black block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Kategorisieren</a>
             </div>
         </div>

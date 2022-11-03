@@ -19,6 +19,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/bank/', include('bank.urls')),
+    path('api/', include('cashapp.urls')),
     path(r'auth/' , include('djoser.urls')),
     path(r'auth/', include('djoser.urls.jwt')),
 ]
