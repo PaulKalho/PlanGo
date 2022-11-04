@@ -1,1 +1,3 @@
 pip install -U marshmallow
+rest_framework
+djoser

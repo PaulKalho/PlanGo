@@ -9,10 +9,10 @@ from marshmallow import Schema, fields
 
 # Parse Transaction Class:
 from .ParseTransactions import ParseTransaction
-from cashapp.models import FixAusgaben
+from cashapp.models import FixAusgaben, FixIncome
 
 import requests
-import json
+import datetime
 import os
 
 # def getTokens():
@@ -27,14 +27,15 @@ def parseTransactions(transactions):
     #This class as well as schema is used to json-"serialize", the data we get from the request and make it to a json-Array
     #See the marshmallow-dependency documentation
     class TransactionSchema(Schema):
-        date = fields.Str() # Vllt zu DateField ändern???? NOCH STRING:
+        date = fields.Date() 
         creditor = fields.Str()
         debitor = fields.Str()
         value = fields.Decimal()
         mandateId = fields.String()  
         creditorIban = fields.Str()
         debtorIban = fields.Str()
-        marked = fields.Bool()
+        isFixOutcome = fields.Bool()
+        isFixIncome = fields.Bool()
         
     schema = TransactionSchema()
     
@@ -44,31 +45,62 @@ def parseTransactions(transactions):
     for transaction in booked:
         #EVTL. statt madateID einfach IBAN nutzen, PROBLEM: Creditor and Debtor
         #Check if mandateId is empty, if yes, then object mandateId should stay empty
+        dateTransaction = datetime.datetime.strptime(transaction.get("bookingDate"), "%Y-%m-%d").date()
         if transaction.get("mandateId") != None and transaction.get("mandateId") != "OFFLINE":
             mandateId = transaction.get("mandateId")
         else:
             mandateId = None
 
-        # Call checkFixOutcome here with transaction.
-        marked = checkFixOutcome(transaction)
+        # Call checkTransactions here with transaction.
+        # Checks if Transaction is in fixIn or fixOutcome
+        fixOutcome = False
+        fixIncome = False
+        isOutOrInOrNone = checkFixTransactions(transaction)
+        if(isOutOrInOrNone == "fixOutcome"):
+            fixOutcome = True
+        elif(isOutOrInOrNone == "fixIncome"):
+            fixIncome = True
 
-        obj = ParseTransaction(transaction.get("bookingDate"), transaction.get("creditorName"), transaction.get("debtorName"), transaction["transactionAmount"]["amount"], mandateId, transaction["creditorAccount"]["iban"], transaction["debtorAccount"]["iban"], marked)
+
+        obj = ParseTransaction(dateTransaction, transaction.get("creditorName"), transaction.get("debtorName"), transaction.get("transactionAmount").get("amount"), mandateId, transaction.get("creditorAccount").get("iban"), transaction.get("debtorAccount").get("iban"), fixOutcome, fixIncome)
         result = schema.dump(obj.__dict__)
 
         final.append(result)
 
     return final
 
-def checkFixOutcome(transaction):
+def checkFixTransactions(transaction):
     # This Function checks if @param transaction is in database fixOutcome. If yes @return True else @return False
     fixOutcome = FixAusgaben.objects.all()
+    fixIncome = FixIncome.objects.all()
+
+    OutOrIncome = None
 
     for obj in fixOutcome:
-        # Hier die Logik wie transaktionen prüfen ob fixOutcome -> Nochmal nachdenken
-        if(obj.mandate_id == transaction.get("mandateId")):
-            return True   
+        # Hier die Logik wie transaktionen prüfen ob fixOutcome 
+        if(
+        obj.creditor_iban == transaction.get("creditorAccount").get("iban") 
+        and obj.debtor_iban ==  transaction.get("debtorAccount").get("iban") 
+        and obj.creditorName == transaction.get("creditorName")
+        and obj.debtorName == transaction.get("debtorName")
+        and float(transaction.get("transactionAmount").get("amount")) < 0
+        ):
+            OutOrIncome = "fixOutcome"
+            break
+
+    for obj in fixIncome:
+        # Hier wird geprüft ob transaktion is fixIncome
+        if(
+        obj.creditor_iban == transaction.get("creditorAccount").get("iban") 
+        and obj.debtor_iban ==  transaction.get("debtorAccount").get("iban") 
+        and obj.creditorName == transaction.get("creditorName")
+        and obj.debtorName == transaction.get("debtorName")
+        and float(transaction.get("transactionAmount").get("amount")) > 0
+        ):
+            OutOrIncome = "fixIncome"
+            break
     
-    return False
+    return OutOrIncome
 
 
 

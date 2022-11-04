@@ -9,3 +9,6 @@ BankingIdee:
            -Durchschnittsausgaben am Tag (aktuell und insgesamt) für Statistik
            -Wie viel Budget pro Tag ist noch verfügbar
     -Kategorisierung der Ausgaben -> muss User immer aktuell machen für Statistik
+
+
+-Sobald die erste FixEinnahme wieder kommt, fängt ein neuer Monat an

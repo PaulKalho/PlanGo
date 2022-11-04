@@ -37,7 +37,8 @@ function BankingMain() {
                             debtorIban: resultBooked.debtorIban,
                             value: resultBooked.value,
                             mandateId: resultBooked.mandateId,
-                            marked: resultBooked.marked
+                            isFixOutcome: resultBooked.isFixOutcome,
+                            isFixIncome: resultBooked.isFixIncome
                         }) 
 
                         setTransactions(arr);

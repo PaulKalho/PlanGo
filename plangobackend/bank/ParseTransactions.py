@@ -3,7 +3,7 @@ from marshmallow import Schema, fields
 
 class ParseTransaction(Schema):
 
-    def __init__(self, date, creditor, debitor, value, mandateId, creditor_iban, debtor_iban, marked):
+    def __init__(self, date, creditor, debitor, value, mandateId, creditor_iban, debtor_iban, fixOutcome, fixIncome):
         self.date = date
         self.creditor = creditor
         self.debitor = debitor
@@ -11,6 +11,7 @@ class ParseTransaction(Schema):
         self.mandateId = mandateId
         self.creditorIban = creditor_iban
         self.debtorIban = debtor_iban
-        self.marked = marked
+        self.isFixOutcome = fixOutcome
+        self.isFixIncome = fixIncome
 
     
