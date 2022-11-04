@@ -2,6 +2,7 @@ import { Breadcrumbs } from "@material-tailwind/react";
 import React, {useEffect, useState} from "react";
 import { Link, useParams } from "react-router-dom";
 import axiosInstance from "../axios";
+import Overview from "../components/cashapp/Overview";
 import TransactionList from "../components/cashapp/TransactionList";
 import NavbarMain from "../components/main/NavbarMain";
 
@@ -71,6 +72,7 @@ function BankingMain() {
                     Transaktionen
                 </Link>
             </Breadcrumbs>
+            <Overview />
             <TransactionList transactions={transactions} loading={loading} />
         </div>
     )
