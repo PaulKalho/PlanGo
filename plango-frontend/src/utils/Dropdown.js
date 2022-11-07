@@ -1,11 +1,15 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import axiosInstance from '../axios';
 import TransactionList from "../components/cashapp/TransactionList";
-import { BsArrowLeftShort } from "react-icons/bs"
+import { BsArrowLeftShort, BsPlusLg } from "react-icons/bs"
 
-function Dropdown ({transaction}) {
+function Dropdown ({transaction, categories, setCategories}) {
     const[isActive, setIsActive] = useState(false)
     const[isLowActive, setIsLowActive] = useState(false)
+    const initialAddData = Object.freeze({
+        name:  '',
+    });
+    const[addData, updateAddData] = useState(initialAddData);
 
     const handleClick = () => {
         setIsActive(!isActive);
@@ -13,25 +17,6 @@ function Dropdown ({transaction}) {
 
     const handleLowClick = () => {
         setIsLowActive(!isLowActive);
-    }
-
-    const renderCategories = () => {
-        // Get all Categories
-        let categories = ['Essen', 'Einkaufen', 'Trinken'];
-        const arr = [];
-        categories.forEach(element => {
-
-            arr.push(
-                <div className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm">
-                        
-                    <input type="checkbox" className="mx-2"></input>
-                    <label for="checkbox-input">{element}</label>
-                
-                </div>
-            )
-        });
-
-        return arr
     }
 
     const handleSetOutgoings = (e) => {
@@ -74,6 +59,55 @@ function Dropdown ({transaction}) {
             })
     }
 
+    const renderCategories = () => {
+        // Get all Categories
+        // console.log("render")
+        const arr = [];
+        categories.forEach(element => {
+
+            arr.push(
+                <div className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm">
+                        
+                    <input type="checkbox" className="mx-2"></input>
+                    <label for="checkbox-input">{element}</label>
+                
+                </div>
+            )
+        });
+
+        return arr
+    }
+
+    // Add Data
+    
+    const handleChange = (e) => {
+        updateAddData({
+            ...addData,
+            [e.target.name]: e.target.value.trim(),
+        })
+    }
+
+    const handleAddGroup = (e) => {
+        e.preventDefault();
+        // updateAddData(initialAddData)
+
+        let payload = {
+            name: addData.name
+        }
+
+        axiosInstance
+            .post("/api/group/", payload)
+            .then((res) => {
+                console.log(res);
+                // Push name to ffrontend array
+                setCategories((categories) => [...categories, res.data.name])
+                updateAddData(initialAddData)
+            })
+        
+        console.log(categories)
+        
+    }
+
   return (
     <div className="relative inline-block text-left flex flex-row">
         <div >
@@ -95,41 +129,19 @@ function Dropdown ({transaction}) {
                 </button>
                 { isLowActive &&
                 <div className="absolute -translate-x-full -translate-y-2/3 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <div className="py-1" role="none">
+                    <div className="pt-2" role="none">
                         {renderCategories()}
-                
+                        {/* <a onClick={handleAddGroup}className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem">Hinzufügen + </a> */}
+                        <div class="relative mt-1">
+                            <input onChange={handleChange} value={addData.name} id="name" name="name" class="block p-2 text-sm text-gray-900 bg-gray-50 rounded-r-lg border-l-gray-100 border-l-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" placeholder="Hinzufügen" required />
+                            <button onClick={handleAddGroup} type="submit" class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-blue-700 rounded-r-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"><BsPlusLg /></button>
+                        </div>
+                    
                     </div>
                 </div>
                 }
             </div>
         </div>
-        // <div id="dropdown" class="z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700">
-        //     <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="multiLevelDropdownButton">
-        //         <li>
-        //             <a href="#"  class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Dashboard</a>
-        //         </li> 
-        //     </ul>
-        //     <li>
-        //     <button id="doubleDropdownButton" data-dropdown-toggle="doubleDropdown" data-dropdown-placement="right-start" type="button" class="flex justify-between items-center py-2 px-4 w-full hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Dropdown<svg aria-h   idden="true" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg></button>
-        //     <div id="doubleDropdown" class="z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700">
-        //         <ul class="py-1 text-sm text-gray-700 dark:text-gray-200">
-        //         <li>
-        //             <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Overview</a>
-        //         </li>
-        //         <li>
-        //             <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">My downloads</a>
-        //         </li>
-        //         <li>
-        //             <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Billing</a>
-        //         </li>
-        //         <li>
-        //             <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Rewards</a>
-        //         </li>
-        //         </ul>
-        //     </div>
-        // </li>
-        // </div>
-        
         )}
     </div>
   )

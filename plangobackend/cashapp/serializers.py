@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
-from .models import FixAusgaben, FixIncome
+from .models import FixAusgaben, FixIncome, Group
 
 class AusgabenSerializer(serializers.ModelSerializer): 
     def validate(self, data):
@@ -45,4 +45,16 @@ class IncomeSerializer(serializers.ModelSerializer):
             'mandate_id',
             'creditor_iban',
             'debtor_iban'
+        )
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        read_only_fields = (
+            'created_by_id',
+        ) 
+        fields = (
+            'id',
+            'name',
+            'created_by_id'
         )

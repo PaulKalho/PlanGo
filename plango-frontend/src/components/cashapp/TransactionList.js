@@ -1,18 +1,9 @@
 import React from "react"
-import { BsThreeDotsVertical } from "react-icons/bs"
 import GridLoader from "react-spinners/GridLoader"
 import Dropdown from "../../utils/Dropdown"
 
-// function formatMoney(number) {
-//     return number.toLocaleString('de-DE', {style: 'currency', currency: 'EUR'});
-// }
-
-function TransactionList ({transactions , loading}) {
-
-    
-
+function TransactionList ({transactions , loading, categories, setCategories}) {
     if(!loading) {
-        
         return (
             <div>
                 <table className="min-w-full">
@@ -36,7 +27,7 @@ function TransactionList ({transactions , loading}) {
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value < 0 ? item.creditor : item.debitor}</td>
                                     <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value ? item.value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) : item.value}</td>
                                     <td>
-                                        <Dropdown transaction={item} />        
+                                        <Dropdown transaction={item} categories={categories} setCategories={setCategories}/>        
                                     </td>
                                 </tr>
                             )

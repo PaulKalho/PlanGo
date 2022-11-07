@@ -14,6 +14,8 @@ from cashapp.models import FixAusgaben, FixIncome
 import requests
 import datetime
 import os
+import uuid
+import hashlib
 
 # def getTokens():
 #     #Hier sollen die access und refresh tokens von nordigen abgefragt werden
@@ -24,9 +26,11 @@ def parseTransactions(transactions):
 
     final = [] # Used for Final JSON-Array
 
+
     #This class as well as schema is used to json-"serialize", the data we get from the request and make it to a json-Array
     #See the marshmallow-dependency documentation
     class TransactionSchema(Schema):
+        uoi = fields.Str()
         date = fields.Date() 
         creditor = fields.Str()
         debitor = fields.Str()
@@ -46,6 +50,21 @@ def parseTransactions(transactions):
         #EVTL. statt madateID einfach IBAN nutzen, PROBLEM: Creditor and Debtor
         #Check if mandateId is empty, if yes, then object mandateId should stay empty
         dateTransaction = datetime.datetime.strptime(transaction.get("bookingDate"), "%Y-%m-%d").date()
+        
+        #Create uuid identifier
+        # Uid wird hergestellt aus: Datum, Amount, creditorName, debitorName
+        string_seed = transaction.get("bookingDate") + transaction.get("transactionAmount").get("amount") + transaction.get("creditorName") + transaction.get("debtorName")
+        #UUID.nameUUIDFromBytes(aString.getBytes()).toString();
+        # string_seed = {
+        #     "date": transaction.get("bookingDate"),
+        #     "amount": transaction.get("transactionAmount").get("amount"),
+        #     "creditor": transaction.get("creditorName"),
+        #     "debtor": transaction.get("debtorName")
+        # }
+        m = hashlib.md5()
+        m.update(string_seed.encode('utf-8'))
+        uuid_te = uuid.UUID(m.hexdigest())
+
         if transaction.get("mandateId") != None and transaction.get("mandateId") != "OFFLINE":
             mandateId = transaction.get("mandateId")
         else:
@@ -62,7 +81,7 @@ def parseTransactions(transactions):
             fixIncome = True
 
 
-        obj = ParseTransaction(dateTransaction, transaction.get("creditorName"), transaction.get("debtorName"), transaction.get("transactionAmount").get("amount"), mandateId, transaction.get("creditorAccount").get("iban"), transaction.get("debtorAccount").get("iban"), fixOutcome, fixIncome)
+        obj = ParseTransaction(uuid_te, dateTransaction, transaction.get("creditorName"), transaction.get("debtorName"), transaction.get("transactionAmount").get("amount"), mandateId, transaction.get("creditorAccount").get("iban"), transaction.get("debtorAccount").get("iban"), fixOutcome, fixIncome)
         result = schema.dump(obj.__dict__)
 
         final.append(result)

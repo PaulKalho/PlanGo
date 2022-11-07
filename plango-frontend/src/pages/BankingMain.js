@@ -11,6 +11,7 @@ function BankingMain() {
     const { accountId } = useParams()
     const [loading, setLoading] = useState(false);
     const [transactions, setTransactions] = useState([""])
+    const [categories, setCategories] = useState([])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -53,7 +54,21 @@ function BankingMain() {
             }
             setLoading(false)  
         }
-        fetchData()
+        const fetchAllCategories = async () => {
+            console.log("fetch")
+            axiosInstance
+                .get("/api/group/")
+                .then((res) => {
+                    let cat= [];
+                    res.data.forEach(element => {
+                        cat.push(element.name);
+                    })
+                    setCategories(cat);
+                })  
+        }
+
+        fetchAllCategories();
+        fetchData();
     }, []);
     return (
         <div>
@@ -73,7 +88,7 @@ function BankingMain() {
                 </Link>
             </Breadcrumbs>
             <Overview />
-            <TransactionList transactions={transactions} loading={loading} />
+            <TransactionList transactions={transactions} loading={loading} categories={categories} setCategories={setCategories}/>
         </div>
     )
 

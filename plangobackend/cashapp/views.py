@@ -1,9 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from .models import FixAusgaben, FixIncome
-from .serializers import AusgabenSerializer, IncomeSerializer
-# Serializer?????
+from .models import FixAusgaben, FixIncome, Group
+from .serializers import AusgabenSerializer, IncomeSerializer, GroupSerializer
 
 #Funktion die einen Eintrag in Fixausgaben schreibt
 class FixOutcomeView(viewsets.ModelViewSet):
@@ -31,4 +30,13 @@ class FixIncomeView(viewsets.ModelViewSet):
         #Save new entry
         serializer.save(created_by = self.request.user)
 
+class GroupView(viewsets.ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(created_by = self.request.user.id)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by = self.request.user)
 
