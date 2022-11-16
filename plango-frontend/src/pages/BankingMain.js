@@ -32,6 +32,7 @@ function BankingMain() {
                     console.log(resultBooked);
                     resultBooked.map((resultBooked) => {
                         arr.push({
+                            uoi: resultBooked.uoi,
                             date: resultBooked.date,
                             creditor: resultBooked.creditor,
                             debitor: resultBooked.debitor,

@@ -10,11 +10,27 @@ function Dropdown ({transaction, categories, setCategories}) {
         name:  '',
     });
     const[addData, updateAddData] = useState(initialAddData);
+    const[group, setGroup] = useState("");
+    const[defaultChecked, setDefaultChecked] = useState(true);
 
-    const handleClick = () => {
+    const handleClick = async () => {
         setIsActive(!isActive);
-    }
+        // console.log(transaction)
+        // Get the group of the transaction we selected
+        let payload = {
+            "transaction_id": transaction.uoi
+        }
 
+        axiosInstance
+            .post('/api/isgroup/', payload)
+            .then(res => {
+                //  console.log(res.data);
+                setGroup(res.data);
+            })
+            .catch((err) => {
+                // console.log(err)
+            })
+    }
     const handleLowClick = () => {
         setIsLowActive(!isLowActive);
     }
@@ -59,22 +75,33 @@ function Dropdown ({transaction, categories, setCategories}) {
             })
     }
 
+    const handleCheckboxChange = (e) => {
+        // e.preventDefault();
+    }
+
     const renderCategories = () => {
         // Get all Categories
         // console.log("render")
         const arr = [];
-        categories.forEach(element => {
+        let activate = false;
 
+        categories.forEach(element => {
+            activate = false
+            if(element == group) {
+                activate = true
+                console.log("category found")
+            }
+            
             arr.push(
                 <div className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm">
                         
-                    <input type="checkbox" className="mx-2"></input>
+                    <input type="radio" name="groups" className="mx-2" onChange={handleCheckboxChange} defaultChecked={activate}></input>
                     <label for="checkbox-input">{element}</label>
                 
                 </div>
             )
         });
-
+        arr.push(<input type="radio" name="groups" className="mx-2" defaultChecked={activate ? false : true} hidden={true}></input>)
         return arr
     }
 
@@ -102,10 +129,29 @@ function Dropdown ({transaction, categories, setCategories}) {
                 // Push name to ffrontend array
                 setCategories((categories) => [...categories, res.data.name])
                 updateAddData(initialAddData)
+                setGroup(undefined)
             })
-        
-        console.log(categories)
-        
+
+    
+    }
+
+    const handleDeleteGroup = (e) => {
+        e.preventDefault();
+        // updateAddData(initialAddData)
+
+        let payload = {
+            name: "Tester"
+        }
+
+        axiosInstance
+            .post("/api/group/", payload)
+            .then((res) => {
+                console.log(res);
+                // Push name to ffrontend array
+                setCategories(categories)
+                //updateAddData(initialAddData)
+                setGroup(undefined)
+            })
     }
 
   return (
@@ -136,7 +182,8 @@ function Dropdown ({transaction, categories, setCategories}) {
                             <input onChange={handleChange} value={addData.name} id="name" name="name" class="block p-2 text-sm text-gray-900 bg-gray-50 rounded-r-lg border-l-gray-100 border-l-2 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:border-blue-500" placeholder="Hinzufügen" required />
                             <button onClick={handleAddGroup} type="submit" class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-blue-700 rounded-r-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"><BsPlusLg /></button>
                         </div>
-                    
+                        <button onClick={handleDeleteGroup} type="submit" class="absolute top-0 right-0 p-2.5 text-sm font-medium text-white bg-blue-700 rounded-r-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Delete Group</button>
+
                     </div>
                 </div>
                 }
