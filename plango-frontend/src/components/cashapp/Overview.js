@@ -1,6 +1,9 @@
 import React, { useState } from "react"
 import { useEffect } from "react";
 import axiosInstance from "../../axios"
+import { BsFillPieChartFill } from "react-icons/bs"
+import {Link} from "react-router-dom"
+
 
 
 function Overview () {
@@ -21,7 +24,7 @@ function Overview () {
                 income.map((element) => {
                   amount += parseFloat(element.amount)
                 })
-                setTotalInc(amount);
+                setTotalInc(amount.toFixed(2));
               })
               .catch(err => {
                 console.log(err)
@@ -37,7 +40,8 @@ function Overview () {
                 outcome.map((element) => {
                   amount += parseFloat(element.amount)
                 })
-                setTotalOut(amount);
+
+                setTotalOut(amount.toFixed(2));
               })
               .catch(err => {
                 console.log(err)
@@ -54,7 +58,7 @@ function Overview () {
 
   return (
     <div className="flex flex-row border-solid">
-        <div className="p-5 flex flex-col text-center">
+        <div className="border p-5 flex flex-col text-center">
             <h1>Fixe Ausgaben:</h1>
             <div>{totalOut}</div>
         </div>
@@ -64,7 +68,12 @@ function Overview () {
                 <div>{totalInc}</div>
             </div>
         </div>
-        <div className="self-end border-solid p-5 border-black">Statistiken -</div>
+        <Link to="statistik" className="p-5 border-black">
+            <div className="border p-5 flex flex-col text-center">
+                <h1>Statistiken:</h1>
+                <div><BsFillPieChartFill size={30}/></div>
+            </div>
+        </Link>
     </div>
   )
 };

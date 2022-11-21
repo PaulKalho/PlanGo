@@ -4,6 +4,8 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework import status
 from rest_framework.response import Response
 from .ResponseException import ResponseException
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
 
 from .models import FixAusgaben, FixIncome, Group, TransactionGroupIntermediate
 from .serializers import AusgabenSerializer, IncomeSerializer, GroupSerializer, TransactionGroupIntermediateSerializer
@@ -54,22 +56,37 @@ class TransactionGroupIntermediateView(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(created_by = self.request.user)
 
-
-
-# Get the groupp for a specific transaction
 @api_view(('POST',))
-def get_group(request):
-    transaction_id = request.data["transaction_id"]
+def delete_by_uoi(request):
+    """
+    This function is used to delete a entry from transactiongroupintermediate by its uoi
 
-    #Get Transaction and group from it with the transaction_id
-    try:
-        row = TransactionGroupIntermediate.objects.get(transaction_id=transaction_id)
-        group = row.group.name
-        response = Response(data=group, status=status.HTTP_200_OK)
-    except TransactionGroupIntermediate.DoesNotExist:
-        raise ResponseException(status_code=404)
+    :request: The sent request { uoi: "uoi"}
 
-    return response
+    :response: 200 OKAY
+    """
+    # TODO: Catch Error not found!
+    TransactionGroupIntermediate.objects.get(transaction_id = request.data["uoi"]).delete()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(('GET',))
+def getStatisticData(request):
+    # SELECT G.name AS groupname, EXTRACT(MONTH FROM cashapp_transactiongroupintermediate.month) AS month, SUM(cashapp_transactiongroupintermediate.amount) AS summe FROM cashapp_group AS G
+	#      RIGHT JOIN cashapp_transactiongroupintermediate ON G.id= cashapp_transactiongroupintermediate.group_id
+    # GROUP BY (G.name, EXTRACT(MONTH FROM cashapp_transactiongroupintermediate.month))
+    # TODO: Error Handling 
+    """
+    This function groups the transactionGroupIntermediate by month and group and then aggregates the values of
+    the transactions.
+    :request: The request sent
+
+    :return: Response of the query
+    """
+    queryset = TransactionGroupIntermediate.objects.filter(created_by_id=request.user.id).values("group", month_r=TruncMonth('month')).annotate(amount_r=Sum("amount")).order_by(TruncMonth('month'))
+
+    return Response(status=status.HTTP_200_OK, data=queryset)
+
+
 
 
 

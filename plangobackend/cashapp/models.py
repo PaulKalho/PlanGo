@@ -9,6 +9,7 @@ class FixAusgaben(models.Model):
     created_by = models.ForeignKey(CustomUser, related_name='ausgaben_user', on_delete=models.CASCADE, default=1)
     creditor_iban = models.CharField(max_length=255, blank=True, null=True)
     debtor_iban = models.CharField(max_length=255, blank=True, null=True)
+    transaction_date = models.DateField()
 
 class FixIncome(models.Model):
     creditorName = models.CharField(max_length=255, blank=True, null=True)
@@ -18,6 +19,7 @@ class FixIncome(models.Model):
     created_by = models.ForeignKey(CustomUser, related_name='income_user', on_delete=models.CASCADE, default=1)
     creditor_iban = models.CharField(max_length=255, blank=True, null=True)
     debtor_iban = models.CharField(max_length=255, blank=True, null=True)
+    transaction_date = models.DateField()
 
 class Group(models.Model):
     name = models.CharField(max_length=255)
@@ -32,7 +34,3 @@ class TransactionGroupIntermediate(models.Model):
     created_by = models.ForeignKey(CustomUser, related_name='intermediate_user', on_delete=models.CASCADE, default=1)
 
 
-
-# ---------------------------------------------------------
-# transaction_id | month | amount | group | created_by 
-# aasdasd-asdasd | 09/22 | 69,69  |   2   |     1

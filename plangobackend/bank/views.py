@@ -38,7 +38,7 @@ def getAttr(transaction, attr):
         return transaction.get(attr)
     return None
 
-def parseTransactions(transactions):
+def parseTransactions(transactions, user):
     """
         This function parses the Function to an json-array for the frontend and analyses it (isGroup, isTransaction)
         :param transaction: raw transaction data from nordigen
@@ -85,7 +85,7 @@ def parseTransactions(transactions):
         # Now check if Transaction is a fix transaction or not:
         fixOutcome = False
         fixIncome = False
-        isOutOrInOrNone = checkFixTransactions(transaction)
+        isOutOrInOrNone = checkFixTransactions(transaction, user)
         if(isOutOrInOrNone == "fixOutcome"):
             fixOutcome = True
         elif(isOutOrInOrNone == "fixIncome"):
@@ -94,7 +94,7 @@ def parseTransactions(transactions):
         ###########################################################################################
 
         # Check if transaction has been grouped already
-        group = checkGroupTransaction(uuid_te)
+        group = checkGroupTransaction(uuid_te, user)
 
         ###########################################################################################
         
@@ -129,16 +129,16 @@ def generateSeed(transaction):
             seed += transaction.get(attribute)
     return seed
 
-def checkGroupTransaction(uuid):
+def checkGroupTransaction(uuid, user):
     """
     This function checks if the uuid is in TransactionGroupIntermediate Table
     :param uuid: The generate uuid of a transaction
+    :param user: The user which transactions should be grouped. 
     
     :return: The name of the group which was found OR None
     """
 
-    # TODO: Filter groupIntermediate by user id
-    groupIntermediate = TransactionGroupIntermediate.objects.all()
+    groupIntermediate = TransactionGroupIntermediate.objects.all().filter(created_by_id = user)
     group = None
     for obj in groupIntermediate:
         transaction_id = obj.transaction_id
@@ -149,15 +149,16 @@ def checkGroupTransaction(uuid):
 
     return group
 
-def checkFixTransactions(transaction):
+def checkFixTransactions(transaction, user):
     """
     Checks if transaction is in database fixOut-/Income Table
     :param transaction: The raw transaction Data from NordigenAPI
+    :param user: The user object of the user which transactions should be checked if fix or not
 
     :return: string "fixOutcome" OR "fixIncome" which is passed to the frontend later (with the jsonyfied transaction)
     """
-    fixOutcome = FixAusgaben.objects.all()
-    fixIncome = FixIncome.objects.all()
+    fixOutcome = FixAusgaben.objects.all().filter(created_by_id = user.id)
+    fixIncome = FixIncome.objects.all().filter(created_by_id = user.id)
 
     OutOrIncome = None
 
@@ -365,7 +366,7 @@ def list_transactions(request):
     if r_status == 200:
         content = r.json()
         #Parse Response(transaction) and only give important info back to frontend
-        content = parseTransactions(content) # This is a json array: [{},{},{}]
+        content = parseTransactions(content, request.user) # This is a json array: [{},{},{}]
 
         response = Response(data=content, status=status.HTTP_200_OK)
     else:

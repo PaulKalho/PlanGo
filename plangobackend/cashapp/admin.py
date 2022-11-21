@@ -11,11 +11,11 @@ from .models import TransactionGroupIntermediate
 
 class CustomAusgabenAdmin(admin.ModelAdmin):
     model = FixAusgaben
-    list_display = ('id', 'creditorName', 'debtorName', 'amount', 'created_by_id', 'mandate_id', 'creditor_iban', 'debtor_iban')
+    list_display = ('id', 'creditorName', 'debtorName', 'amount', 'created_by_id', 'mandate_id', 'creditor_iban', 'debtor_iban', 'transaction_date')
 
 class CustomIncomeAdmin(admin.ModelAdmin):
     model = FixIncome
-    list_display = ('id', 'creditorName', 'debtorName', 'amount', 'created_by_id', 'mandate_id', 'creditor_iban', 'debtor_iban')
+    list_display = ('id', 'creditorName', 'debtorName', 'amount', 'created_by_id', 'mandate_id', 'creditor_iban', 'debtor_iban', 'transaction_date')
 
 class CustomGroupAdmin(admin.ModelAdmin):
     model = Group

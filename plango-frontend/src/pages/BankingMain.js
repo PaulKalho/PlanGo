@@ -41,7 +41,8 @@ function BankingMain() {
                             value: resultBooked.value,
                             mandateId: resultBooked.mandateId,
                             isFixOutcome: resultBooked.isFixOutcome,
-                            isFixIncome: resultBooked.isFixIncome
+                            isFixIncome: resultBooked.isFixIncome,
+                            group: resultBooked.group
                         }) 
 
                         setTransactions(arr);
@@ -62,9 +63,13 @@ function BankingMain() {
                 .then((res) => {
                     let cat= [];
                     res.data.forEach(element => {
-                        cat.push(element.name);
+                        cat.push({
+                            id: element.id,
+                            name: element.name
+                        });
                     })
                     setCategories(cat);
+                    console.log(cat);
                 })  
         }
 

@@ -22,7 +22,8 @@ class AusgabenSerializer(serializers.ModelSerializer):
             'created_by_id',
             'mandate_id',
             'creditor_iban',
-            'debtor_iban'
+            'debtor_iban',
+            'transaction_date'
         )
 
 class IncomeSerializer(serializers.ModelSerializer): 
@@ -44,7 +45,8 @@ class IncomeSerializer(serializers.ModelSerializer):
             'created_by_id',
             'mandate_id',
             'creditor_iban',
-            'debtor_iban'
+            'debtor_iban',
+            'transaction_date'
         )
 
 class GroupSerializer(serializers.ModelSerializer):

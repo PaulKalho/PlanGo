@@ -13,6 +13,7 @@ import RegisterPage from "./pages/RegisterPage";
 import BankingIntro from "./pages/BankingIntro";
 import BankingMain from "./pages/BankingMain";
 import ChooseAccount from "./pages/ChooseAccounts";
+import Statistic from "./components/cashapp/Statistic";
 
 
 function AppRouter() {
@@ -29,6 +30,7 @@ function AppRouter() {
                 <Route path="/dashboard/cash" element= { <BankingIntro /> } exact />
                 <Route path="/dashboard/cash/accounts/" element={ <ChooseAccount /> } exact /> 
                 <Route path="/dashboard/cash/accounts/app/:accountId" element={ <BankingMain /> } /> 
+                <Route path="/dashboard/cash/accounts/app/:accountId/statistik" element={ <Statistic /> } /> 
             </Route>
         </Routes>
     </BrowserRouter>
