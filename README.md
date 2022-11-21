@@ -1,2 +1,2 @@
 # PlanGo
- This is a Personal Organizer App/Browser Startpage written with React and JS
+ This is a Personal Organizer App/Browser Startpage written with ReactJS and Django as the Backend
