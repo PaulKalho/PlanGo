@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import axiosInstance from "../../axios";
 import NavbarMain from "../main/NavbarMain";
 import { Link, useParams } from "react-router-dom";
@@ -6,6 +6,10 @@ import { Breadcrumbs } from "@material-tailwind/react";
 
 function Statistic () {
     const { accountId } = useParams()
+    const [statisticData, setStatisticData] = useState([])
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
 
     useEffect(() => {
         // Load transactionIntermediates, Groups
@@ -20,18 +24,36 @@ function Statistic () {
             // TransactionIntermediates (we only want the amount per group)
             // 
             axiosInstance
-                .get()
+                .get('api/statistics/')
                 .then( res => {
                     console.log(res);
+                    setStatisticData(res.data);
                 })
-            
-            // Groups (wec )
-            axiosInstance
-                .get()
         }
 
         fetchData()
-    })
+    }, [])
+
+    const renderMonths = () => {
+        const arr = []
+        //console.log(statisticData)
+
+        for (const firstLayerProperty in statisticData) {
+            
+        }
+
+        // statisticData.forEach(element => {
+        //     console.log(element)
+        //     //let date = new Date(element)
+        //     // element.forEach(IGroup => {
+                
+        //     // })
+        //     //arr.push(<div>{monthNames[date.getMonth()]}</div>)
+                
+        // })
+        
+        return arr;
+    }
   return (
     <div>
       <div>
@@ -60,7 +82,7 @@ function Statistic () {
                 Es werden für den user alle transactiongroup intermediate geholt und nach Monat gruppiert
                 TODO: monat aus fixausgaben/income wieder rausnehmen
             */}
-
+            {renderMonths()}
 
         </div>
     </div>

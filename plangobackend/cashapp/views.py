@@ -4,8 +4,9 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework import status
 from rest_framework.response import Response
 from .ResponseException import ResponseException
-from django.db.models import Sum
-from django.db.models.functions import TruncMonth
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncMonth, TruncYear
+from datetime import datetime
 
 from .models import FixAusgaben, FixIncome, Group, TransactionGroupIntermediate
 from .serializers import AusgabenSerializer, IncomeSerializer, GroupSerializer, TransactionGroupIntermediateSerializer
@@ -82,9 +83,63 @@ def getStatisticData(request):
 
     :return: Response of the query
     """
-    queryset = TransactionGroupIntermediate.objects.filter(created_by_id=request.user.id).values("group", month_r=TruncMonth('month')).annotate(amount_r=Sum("amount")).order_by(TruncMonth('month'))
+    # TODO: Nach monaten Groupen
+    # Dieses Queryset ist richtig: 
+    queryset = TransactionGroupIntermediate.objects.values("group_id").annotate(sum_r = Sum('amount'), month_r=(TruncMonth('month')), year_r=TruncYear('month')).filter(created_by_id=request.user.id).values("month_r", "sum_r", "group_id").order_by("-month_r", "-year_r")
+    """ The following groups the queryset by months: """
 
-    return Response(status=status.HTTP_200_OK, data=queryset)
+    # Initializing Variable: (greatest month)
+    init = queryset[0].get("month_r")
+    resultArray = []
+    addInit = {
+        "month": init,
+        "group": []
+    }
+    resultArray.append(addInit)
+    i = 0
+
+    # I want it to look like: 
+    # resArray: {  
+    #   data: [
+    #      0: 
+    #       month: 2022-03-01
+    #       group: [
+    #           0: {
+    #               name: "31",
+    #               amount: "22,49"
+    #           }
+    #           1: {
+    #               name: "31",
+    #               amount: "22,49"
+    #           }   
+    #       ]
+    #      1: 
+    #       month: 2022-02-01
+    #       group: []
+    #   ]
+    #}
+
+    for element in queryset:
+        add = {
+            "month": element.get("month_r"),
+            "group": []
+        }
+
+        # Check if month in element is smaller init. 
+        if(element.get("month_r") < init):
+            # If yes then go foarward in result array
+            resultArray.append(add)
+            i = i+1
+
+
+        groupElement = {
+            "name": element.get("group_id"),
+            "amount": element.get("sum_r"),
+        }
+
+        resultArray[i].get("group").append(groupElement)    
+
+    return Response(status=status.HTTP_200_OK, data=resultArray)
 
 
 
