@@ -3,8 +3,23 @@ import axiosInstance from "../../axios";
 import NavbarMain from "../main/NavbarMain";
 import { Link, useParams } from "react-router-dom";
 import { Breadcrumbs } from "@material-tailwind/react";
+import 'chart.js/auto';
+import {
+    Chart as ChartJS,
+    ArcElement,
+    Tooltip,
+    defaults
+  } from 'chart.js';
+  import {
+    Chart,
+    Pie
+  } from 'react-chartjs-2';
 
+
+ChartJS.register(ArcElement, Tooltip);
 function Statistic () {
+    
+
     const { accountId } = useParams()
     const [statisticData, setStatisticData] = useState([])
     const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -34,26 +49,41 @@ function Statistic () {
         fetchData()
     }, [])
 
+
     const renderMonths = () => {
-        const arr = []
-        //console.log(statisticData)
+        const arr=[];
 
-        for (const firstLayerProperty in statisticData) {
+        statisticData.forEach((el) => {
+            //Set initial pieData for each month!
+            const pieData= {
+                labels: [],
+                datasets: [{
+                    label: "Amount",
+                    data: [],
+                    borderWidth: 1,
+                }]
+            };
+            const date = new Date(el.month);
+            console.log(monthNames[date.getMonth()]);
+            arr.push(<div key="123">{monthNames[date.getMonth()] + " " + date.getFullYear()}</div>)
+            el.group.forEach((group) => {
+                pieData.labels.push(group.name);
+                pieData.datasets[0].data.push(group.amount);
+            })
+            arr.push(
+            <div className="w-80">
+            <Pie 
+                data={pieData} 
+                options={{
+                    maintainAscpectRatio: false,
+                }} 
+            />
+            </div>)
             
-        }
-
-        // statisticData.forEach(element => {
-        //     console.log(element)
-        //     //let date = new Date(element)
-        //     // element.forEach(IGroup => {
-                
-        //     // })
-        //     //arr.push(<div>{monthNames[date.getMonth()]}</div>)
-                
-        // })
-        
-        return arr;
+        })
+        return arr
     }
+
   return (
     <div>
       <div>
@@ -77,13 +107,7 @@ function Statistic () {
                     Statistik
                 </Link>
             </Breadcrumbs>
-            {/* Es soll jeder Monat angezeigt werden und die Statistiken dazu */}
-            {/* Wie werden die Monate geladen?
-                Es werden für den user alle transactiongroup intermediate geholt und nach Monat gruppiert
-                TODO: monat aus fixausgaben/income wieder rausnehmen
-            */}
-            {renderMonths()}
-
+            {renderMonths()}      
         </div>
     </div>
   )

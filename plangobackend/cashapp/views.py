@@ -72,10 +72,6 @@ def delete_by_uoi(request):
 
 @api_view(('GET',))
 def getStatisticData(request):
-    # SELECT G.name AS groupname, EXTRACT(MONTH FROM cashapp_transactiongroupintermediate.month) AS month, SUM(cashapp_transactiongroupintermediate.amount) AS summe FROM cashapp_group AS G
-	#      RIGHT JOIN cashapp_transactiongroupintermediate ON G.id= cashapp_transactiongroupintermediate.group_id
-    # GROUP BY (G.name, EXTRACT(MONTH FROM cashapp_transactiongroupintermediate.month))
-    # TODO: Error Handling 
     """
     This function groups the transactionGroupIntermediate by month and group and then aggregates the values of
     the transactions.
@@ -83,21 +79,6 @@ def getStatisticData(request):
 
     :return: Response of the query
     """
-    # TODO: Nach monaten Groupen
-    # Dieses Queryset ist richtig: 
-    queryset = TransactionGroupIntermediate.objects.values("group_id").annotate(sum_r = Sum('amount'), month_r=(TruncMonth('month')), year_r=TruncYear('month')).filter(created_by_id=request.user.id).values("month_r", "sum_r", "group_id").order_by("-month_r", "-year_r")
-    """ The following groups the queryset by months: """
-
-    # Initializing Variable: (greatest month)
-    init = queryset[0].get("month_r")
-    resultArray = []
-    addInit = {
-        "month": init,
-        "group": []
-    }
-    resultArray.append(addInit)
-    i = 0
-
     # I want it to look like: 
     # resArray: {  
     #   data: [
@@ -118,6 +99,18 @@ def getStatisticData(request):
     #       group: []
     #   ]
     #}
+    queryset = TransactionGroupIntermediate.objects.values("group_id").annotate(sum_r = Sum('amount'), month_r=(TruncMonth('month')), year_r=TruncYear('month')).filter(created_by_id=request.user.id).values("month_r", "sum_r", "group_id").order_by("-month_r", "-year_r")
+    """ The following groups the queryset by months: """
+
+    # Initializing Variable: (greatest month)
+    init = queryset[0].get("month_r")
+    resultArray = []
+    addInit = {
+        "month": init,
+        "group": []
+    }
+    resultArray.append(addInit)
+    i = 0
 
     for element in queryset:
         add = {
@@ -128,12 +121,12 @@ def getStatisticData(request):
         # Check if month in element is smaller init. 
         if(element.get("month_r") < init):
             # If yes then go foarward in result array
+            init = element.get("month_r")
             resultArray.append(add)
             i = i+1
 
-
         groupElement = {
-            "name": element.get("group_id"),
+            "name": Group.objects.get(id=element.get("group_id")).name,
             "amount": element.get("sum_r"),
         }
 

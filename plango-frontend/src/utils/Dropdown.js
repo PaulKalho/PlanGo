@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react"
 import axiosInstance from '../axios';
 import TransactionList from "../components/cashapp/TransactionList";
 import { BsArrowLeftShort, BsPlusLg } from "react-icons/bs"
+import { MenuItem } from "@material-tailwind/react";
 
-function Dropdown ({transaction, categories, setCategories}) {
+function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[isActive, setIsActive] = useState(false)
     const[isLowActive, setIsLowActive] = useState(false)
     const initialAddData = Object.freeze({
@@ -36,6 +37,9 @@ function Dropdown ({transaction, categories, setCategories}) {
         axiosInstance
             .post("/api/outcome/", payload)
             .then((res) => {
+                transaction.isFixOutcome = true;
+                setChangeColor(String(transaction.uoi))
+                console.log(transaction.uoi)
                 console.log(res);
             })
     }
@@ -57,6 +61,9 @@ function Dropdown ({transaction, categories, setCategories}) {
         axiosInstance
             .post("/api/income/", payload)
             .then((res) => {
+                transaction.isFixIncome = true;
+                //Trigger rerender of list:
+                setChangeColor(String(transaction.uoi))
                 console.log(res);
             })
     }
@@ -101,6 +108,8 @@ function Dropdown ({transaction, categories, setCategories}) {
                 .then((res) => {
                     setCheckNone(false);
                     transaction.group = groupName;
+                    //Change the color to a group color:
+                    setChangeColor(groupName)
                 })
                 
         }
