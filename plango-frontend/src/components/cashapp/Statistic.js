@@ -78,6 +78,7 @@ function Statistic () {
                     maintainAscpectRatio: false,
                 }} 
             />
+            
             </div>)
             
         })

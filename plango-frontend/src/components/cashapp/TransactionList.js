@@ -26,8 +26,8 @@ function TransactionList ({transactions , loading, categories, setCategories}) {
                             // console.log(item)
                             //Idee: In array pushen der state ist und gerenderd wird. State ändern in child component
                             return(
-                                    <div>
-                                        <tr className={`${item.isFixOutcome ? 'bg-red-500' : ''}${item.isFixIncome ? 'bg-green-700' : ''}${item.group ? 'bg-blue-50' : ''} border-b transition duration-300 ease-in-out hover:bg-grey-100`}>
+                                    
+                                        <tr className={`${item.isFixOutcome ? 'bg-red-500' : ''}${item.isFixIncome ? 'bg-green-700' : ''}${item.group ? 'bg-blue-50' : ''} w-full border-b transition duration-300 ease-in-out hover:bg-grey-100`}>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.date}</td>
                                             <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value < 0 ? item.creditor : item.debitor}</td>
                                             <td className="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{item.value ? item.value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }) : item.value}</td>
@@ -35,7 +35,7 @@ function TransactionList ({transactions , loading, categories, setCategories}) {
                                                 <Dropdown transaction={item} categories={categories} setCategories={setCategories} setChangeColor={setChangeColor}/>        
                                             </td>
                                         </tr>
-                                    </div>
+                                    
                             )
                         })
                     }

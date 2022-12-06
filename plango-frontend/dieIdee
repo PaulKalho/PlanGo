@@ -1,6 +1,6 @@
 Also:
 
-BankingIdee:
+# BankingIdee:
 -Jeden Monat soll die Fixe/Variable Einnahme markiert werden
 -Die Fixen Ausgaben jeden Monat werden anfangs festgelegt, Einnahmen jedoch nur beim ersten Eintritt in die App
 
@@ -10,5 +10,15 @@ BankingIdee:
            -Wie viel Budget pro Tag ist noch verfügbar
     -Kategorisierung der Ausgaben -> muss User immer aktuell machen für Statistik
 
-
--Sobald die erste FixEinnahme wieder kommt, fängt ein neuer Monat an
+# SharedSpacesIdee: 
+-Grundidee: Ich will Notizen sharebar machen
+    -Einen share Link generieren, bei dem jemand die Notiz editieren kann (life?!?!?!)
+-Todos Sharen?!
+-Einnahmen & Ausgaben sharen?!
+    WORKFLOW:
+        USER LOGGED IN:
+            -Create new Note -> Note bearbeiten component -> Share Link generation
+            WENN EIN BEREITS BESTEHENDES NOTIZ VON ANDEREM USER BEARBETIET WERDEN SOLL:
+                -Add to his Notes -> Note bearbeiten -> Save/Cancel
+        USER NOT LOGGED IN:
+            -"Login" with Name -> Note bearbeiten component -> Save/Cancel

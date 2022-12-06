@@ -74,6 +74,14 @@ function Overview () {
                 <div><BsFillPieChartFill size={30}/></div>
             </div>
         </Link>
+        <div className="p-5 border-black">
+          <div className="border p-5 flex-col text-center">
+            <h1>Restbudget pro Tag:</h1>
+            <div>30</div>
+            {/* Errechnet aus: (Kontostand - restliche FixAusgaben) / Restliche Tage im Monat */}
+            {/* restliche Fixausgaben = fixAusgaben Tabelle - analyze alle Ausgaben diesen Monat(alle nicht erkannten) */}
+          </div>
+        </div>
     </div>
   )
 };
