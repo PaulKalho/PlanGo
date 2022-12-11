@@ -12,7 +12,8 @@ import {
   } from 'chart.js';
   import {
     Chart,
-    Pie
+    Pie,
+    Bar
   } from 'react-chartjs-2';
 
 
@@ -22,6 +23,8 @@ function Statistic () {
 
     const { accountId } = useParams()
     const [statisticData, setStatisticData] = useState([])
+    const [barData, setBarData] = useState([])
+    const [loading, setLoading] = useState(false)
     const monthNames = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
@@ -38,12 +41,26 @@ function Statistic () {
         const fetchData = async () => {
             // TransactionIntermediates (we only want the amount per group)
             // 
-            axiosInstance
+            setLoading(true)
+            await axiosInstance
                 .get('api/statistics/')
                 .then( res => {
                     console.log(res);
                     setStatisticData(res.data);
                 })
+            
+            let payload = {
+                "id": accountId-1,
+            }
+
+            await axiosInstance
+                .post('api/bank/getbardata/', payload)
+                .then( res => {
+                    console.log(res);
+                    setBarData(res.data)
+                })
+            setLoading(false)
+
         }
 
         fetchData()
@@ -52,36 +69,71 @@ function Statistic () {
 
     const renderMonths = () => {
         const arr=[];
+        if(loading === false) {
+            statisticData.forEach((el, index) => {
+                //Set initial pieData for each month!
+                const pieData= {
+                    labels: [],
+                    datasets: [{
+                        label: "Amount",
+                        data: [],
+                        borderWidth: 1,
+                    }]
+                };
+                let labels = ['Einkommen', 'Ausgaben']
+                let barDataComputed={
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Monat',
+                            data: [] 
+                        }   
 
-        statisticData.forEach((el) => {
-            //Set initial pieData for each month!
-            const pieData= {
-                labels: [],
-                datasets: [{
-                    label: "Amount",
-                    data: [],
-                    borderWidth: 1,
-                }]
-            };
-            const date = new Date(el.month);
-            console.log(monthNames[date.getMonth()]);
-            arr.push(<div key="123">{monthNames[date.getMonth()] + " " + date.getFullYear()}</div>)
-            el.group.forEach((group) => {
-                pieData.labels.push(group.name);
-                pieData.datasets[0].data.push(group.amount);
+                    ]
+                }
+                console.log(index)
+                const date = new Date(el.month);
+                console.log(monthNames[date.getMonth()]);
+                console.log(barData[index])
+                
+                // Month
+                arr.push(<div key="123">{monthNames[date.getMonth()] + " " + date.getFullYear()}</div>)
+                
+                // Build Pie Data
+                el.group.forEach((group) => {
+                    pieData.labels.push(group.name);
+                    pieData.datasets[0].data.push(group.amount);
+                })
+                barData[index].data.forEach((el) => {
+                    barDataComputed.datasets[0].data.push(el.income)
+                    barDataComputed.datasets[0].data.push(Math.abs(el.expenses))
+                })
+
+                arr.push(
+                <div className="inline-flex">
+                    <div className="w-80">
+                    <Pie 
+                        data={pieData} 
+                        options={{
+                            maintainAscpectRatio: false,
+                        }} 
+                    />
+                    
+
+                    </div>
+                    <div className="w-100">
+                        <Bar
+                            data={barDataComputed}
+                            options={{
+                                maintainAspectRatio: false,
+                            }}
+                    />
+                    </div>
+                </div>
+                )
+                
             })
-            arr.push(
-            <div className="w-80">
-            <Pie 
-                data={pieData} 
-                options={{
-                    maintainAscpectRatio: false,
-                }} 
-            />
-            
-            </div>)
-            
-        })
+        }
         return arr
     }
 

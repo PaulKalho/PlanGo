@@ -12,9 +12,9 @@ function BankingMain() {
     const [loading, setLoading] = useState(false);
     const [transactions, setTransactions] = useState([""])
     const [categories, setCategories] = useState([])
-
     useEffect(() => {
         const fetchData = async () => {
+
             const payload = {
                 // accountId - 1 da im backend als arrayPos behandelt wird
                 "id": accountId-1,

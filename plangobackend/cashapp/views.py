@@ -71,7 +71,7 @@ def delete_by_uoi(request):
     return Response(status=status.HTTP_200_OK)
 
 @api_view(('GET',))
-def getStatisticData(request):
+def getPieData(request):
     """
     This function groups the transactionGroupIntermediate by month and group and then aggregates the values of
     the transactions.
@@ -133,6 +133,10 @@ def getStatisticData(request):
         resultArray[i].get("group").append(groupElement)    
 
     return Response(status=status.HTTP_200_OK, data=resultArray)
+
+
+
+
 
 
 

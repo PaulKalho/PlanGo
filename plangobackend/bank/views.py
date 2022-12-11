@@ -1,4 +1,5 @@
 from email import message
+import json
 from wsgiref import headers
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,9 +11,10 @@ from marshmallow import Schema, fields
 # Parse Transaction Class:
 from .ParseTransactions import ParseTransaction
 from cashapp.models import FixAusgaben, FixIncome, TransactionGroupIntermediate
+from datetime import datetime
 
 import requests
-import datetime
+# import datetime
 import os
 import uuid
 import hashlib
@@ -68,7 +70,7 @@ def parseTransactions(transactions, user):
 
     for transaction in booked:
         
-        dateTransaction = datetime.datetime.strptime(transaction.get("bookingDate"), "%Y-%m-%d").date()
+        dateTransaction = datetime.strptime(transaction.get("bookingDate"), "%Y-%m-%d").date()
         
         #############################################################################################
 
@@ -155,7 +157,7 @@ def checkFixTransactions(transaction, user):
     :param transaction: The raw transaction Data from NordigenAPI
     :param user: The user object of the user which transactions should be checked if fix or not
 
-    :return: string "fixOutcome" OR "fixIncome" which is passed to the frontend later (with the jsonyfied transaction)
+    :return: string "fixOutcome" OR "fixIncome" 
     """
     fixOutcome = FixAusgaben.objects.all().filter(created_by_id = user.id)
     fixIncome = FixIncome.objects.all().filter(created_by_id = user.id)
@@ -346,8 +348,6 @@ def list_transactions(request):
 
     #Now get accounts-id from DB with id (pos in array)
         #First get the id and user from the request
-        #Get row from model
-        #get account-id
     id = request.data["id"]
     user = request.user
 
@@ -365,6 +365,7 @@ def list_transactions(request):
 
     if r_status == 200:
         content = r.json()
+
         #Parse Response(transaction) and only give important info back to frontend
         content = parseTransactions(content, request.user) # This is a json array: [{},{},{}]
 
@@ -412,4 +413,161 @@ def check_accounts(request):
         raise ResponseException(status_code=r_status)
 
     return response
+
+@api_view(('POST', ))
+def budget(request):
+    # Möglicherweise muss ich gar nicht nach bereits getanen fix ausgaben checken, da ich ja bereits die insgesamten ausgaben diesbezüglich weiß,
+    # theoretisch könnte ich mit der differenz arbeiten ?!?!?!
+
+    # api/v2/accounts/{id}/balances/
+    # Same procedure like get transactions?
+
+    access_token = request.session['access_token']
+    response = Response()
+
+    #Headers auth headers (access token)
+    headers = {
+        "Authorization": "Bearer " + access_token
+    }
+
+    #Now get accounts-id from DB with id (pos in array)
+        #First get the id and user from the request
+
+    id = request.data["id"]
+    user = request.user
+    row = Credentials.objects.get(user=user)
+    accounts = row.accounts
+
+    account_id = accounts[id]
+
+    #Send request to NORDIGEN to get the Balance
+    url = "https://ob.nordigen.com/api/v2/accounts/" + account_id + "/balances/"
+    r = requests.get(url, headers=headers)
+    r_status = r.status_code
+
+    if r_status == 200:
+        content = r.json()
+        # Now check which fixAusgaben have already been made this month:
+
+        allAusgaben = FixAusgaben.objects.get(user=user)
+
+        # for obj in transactions:
+        #     test = "eints"
+
+        response = Response(data=content, status=status.HTTP_200_OK)
+    else:
+        raise ResponseException(status_code=r_status)
+
+
+@api_view(('POST', ))
+def getBarData(request):
+    """ 
+    This function filters the transaction date for income and expenses
     
+    :param: The requested data -> { id: Account ID }
+    :return: JSON: { income: xx.xx, expenses: xx.xx }
+    """
+
+    access_token = request.session['access_token']
+    response = Response()
+
+    #Headers auth headers (access token)
+    headers = {
+        "Authorization": "Bearer " + access_token
+    }
+
+    #Now get accounts-id from DB with id (pos in array)
+        #First get the id and user from the request
+
+    id = request.data["id"]
+    user = request.user
+    row = Credentials.objects.get(user=user)
+    accounts = row.accounts
+
+    account_id = accounts[id]
+
+
+    # Get the raw transaction Data
+    url = "https://ob.nordigen.com/api/v2/accounts/" + account_id + "/transactions/"
+    r = requests.get(url, headers=headers)
+    r_status = r.status_code
+
+    if r_status == 200:
+        content = r.json()
+
+        # TODO: I only work with booked transactions
+        booked = content["transactions"]["booked"]
+
+        income = 0.00
+        expenses = 0.00
+
+        date_str_init = booked[0].get("bookingDate")
+        monthInit = datetime.strptime(date_str_init, "%Y-%m-%d").strftime("%m")
+        yearInit = datetime.strptime(date_str_init, "%Y-%m-%d").strftime("%Y")
+        initDateStr = yearInit + "-" + monthInit + "-01"
+        initDateObj = datetime.strptime(initDateStr, "%Y-%m-%d")
+
+        resultArray = []
+        struct = {
+            "month": initDateStr,
+            "data": []
+        }
+        resultArray.append(struct)
+        i = 0
+        ibooked = 0
+
+        # Now do this per Month: Logic?!?!?!
+        for transaction in booked:
+            # Get Date and transform it into "%Y-%m-%d" string. Then change the day to 01 and build back to date obj
+            date_str = transaction.get("bookingDate")
+            month = datetime.strptime(date_str, "%Y-%m-%d").strftime("%m")
+            year = datetime.strptime(date_str, "%Y-%m-%d").strftime("%Y")
+            newDateStr = year + "-" + month + "-01"
+            newDateObj = datetime.strptime(newDateStr, "%Y-%m-%d")
+            #################################
+
+            
+            if(newDateObj < initDateObj):
+                #first add addData to "finished" Month:
+                addData = {
+                    "income": round(income, 2),
+                    "expenses": round(expenses, 2)
+                }
+                resultArray[i].get("data").append(addData)
+                expenses = 0.0
+                income = 0.0
+
+
+                # new month reached append structAdd to res array 
+                structAdd = {
+                    "month": newDateStr,
+                    "data": []
+                }
+                resultArray.append(structAdd)
+                initDateObj = newDateObj
+                i = i + 1
+
+            if(float(transaction.get("transactionAmount").get("amount")) < 0): 
+                expenses = expenses + round(float(transaction.get("transactionAmount").get("amount")), 2)
+            
+            if(float(transaction.get("transactionAmount").get("amount")) > 0): 
+                income = income + round(float(transaction.get("transactionAmount").get("amount")), 2)
+
+            ibooked = ibooked + 1
+
+            #For last run through booked:
+            if ibooked == len(booked):
+                addData = {
+                        "income": round(income, 2),
+                        "expenses": round(expenses, 2)
+                    }
+                resultArray[i].get("data").append(addData)
+
+        response = Response(data=resultArray, status=status.HTTP_200_OK)
+    else:
+        raise ResponseException(status_code=r_status)
+
+    return response
+
+
+

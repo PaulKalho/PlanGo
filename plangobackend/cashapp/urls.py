@@ -1,5 +1,5 @@
 
-from .views import FixOutcomeView, FixIncomeView, GroupView, TransactionGroupIntermediateView, delete_by_uoi, getStatisticData
+from .views import FixOutcomeView, FixIncomeView, GroupView, TransactionGroupIntermediateView, delete_by_uoi, getPieData
 from django.urls import path, include
 
 from rest_framework.routers import DefaultRouter
@@ -13,5 +13,5 @@ router.register('transactionGroup', TransactionGroupIntermediateView, basename="
 urlpatterns = [
     path('', include(router.urls)),
     path('deleteTransactionIntermediate/', delete_by_uoi),
-    path('statistics/', getStatisticData)
+    path('statistics/', getPieData)
 ]
