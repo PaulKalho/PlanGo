@@ -4,7 +4,7 @@ import Dropdown from "../../utils/Dropdown";
 
 function TransactionList ({transactions , loading, categories, setCategories}) {
     //4 Options: fixAusgabe, fixEinnahme, kategorisiert, standart
-    const [changeColor, setChangeColor] = useState("bg-white-500")
+    const [changeColor, setChangeColor] = useState("")
     if(!loading) {
         return (
             <div>
