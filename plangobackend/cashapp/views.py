@@ -70,6 +70,58 @@ def delete_by_uoi(request):
     TransactionGroupIntermediate.objects.get(transaction_id = request.data["uoi"]).delete()
     return Response(status=status.HTTP_200_OK)
 
+@api_view(('POST', ))
+def delete_income_by(request):
+    """
+    This function is used to delete a entry from fixIncome by its uoi
+
+    :request: The sent request { 
+            creditorName: 
+            debtorName:  
+            amount: 
+            creditor_iban: 
+            debtor_iban:
+            }
+
+    :response: 200 OKAY
+    """
+    FixIncome.objects.get(
+                            creditorName = request.data["creditorName"],
+                            debtorName = request.data["debtorName"],
+                            amount = request.data["amount"],
+                            creditor_iban  = request.data["creditor_iban"],
+                            debtor_iban = request.data["debtor_iban"],
+                            created_by = request.user
+                        ).delete()
+    return Response(status=status.HTTP_200_OK)
+
+
+@api_view(('POST', ))
+def delete_outcome_by(request):
+    """
+    This function is used to delete a entry from fixIncome by its uoi
+
+    :request: The sent request { 
+            creditorName: 
+            debtorName:  
+            amount: 
+            creditor_iban: 
+            debtor_iban:
+            }
+
+    :response: 200 OKAY
+    """
+    FixAusgaben.objects.get(
+                            creditorName = request.data["creditorName"],
+                            debtorName = request.data["debtorName"],
+                            amount = request.data["amount"],
+                            creditor_iban  = request.data["creditor_iban"],
+                            debtor_iban = request.data["debtor_iban"],
+                            created_by = request.user
+                        ).delete()
+    return Response(status=status.HTTP_200_OK)
+
+
 @api_view(('GET',))
 def getPieData(request):
     """
@@ -101,39 +153,41 @@ def getPieData(request):
     #}
     queryset = TransactionGroupIntermediate.objects.values("group_id").annotate(sum_r = Sum('amount'), month_r=(TruncMonth('month')), year_r=TruncYear('month')).filter(created_by_id=request.user.id).values("month_r", "sum_r", "group_id").order_by("-month_r", "-year_r")
     """ The following groups the queryset by months: """
-
-    # Initializing Variable: (greatest month)
-    init = queryset[0].get("month_r")
-    resultArray = []
-    addInit = {
-        "month": init,
-        "group": []
-    }
-    resultArray.append(addInit)
-    i = 0
-
-    for element in queryset:
-        add = {
-            "month": element.get("month_r"),
+    
+    if queryset:
+        # Initializing Variable: (greatest month)
+        init = queryset[0].get("month_r")
+        resultArray = []
+        addInit = {
+            "month": init,
             "group": []
         }
+        resultArray.append(addInit)
+        i = 0
 
-        # Check if month in element is smaller init. 
-        if(element.get("month_r") < init):
-            # If yes then go foarward in result array
-            init = element.get("month_r")
-            resultArray.append(add)
-            i = i+1
+        for element in queryset:
+            add = {
+                "month": element.get("month_r"),
+                "group": []
+            }
 
-        groupElement = {
-            "name": Group.objects.get(id=element.get("group_id")).name,
-            "amount": element.get("sum_r"),
-        }
+            # Check if month in element is smaller init. 
+            if(element.get("month_r") < init):
+                # If yes then go foarward in result array
+                init = element.get("month_r")
+                resultArray.append(add)
+                i = i+1
 
-        resultArray[i].get("group").append(groupElement)    
+            groupElement = {
+                "name": Group.objects.get(id=element.get("group_id")).name,
+                "amount": element.get("sum_r"),
+            }
 
-    return Response(status=status.HTTP_200_OK, data=resultArray)
+            resultArray[i].get("group").append(groupElement)    
 
+        return Response(status=status.HTTP_200_OK, data=resultArray)
+    else: 
+        return ResponseException("Noch keine Gruppierung vorgenommen!")
 
 
 

@@ -11,6 +11,16 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[addData, updateAddData] = useState(initialAddData);
     const[checkNone, setCheckNone] = useState(false);
 
+    function makeid() {
+        var result           = '';
+        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var charactersLength = characters.length;
+        for ( var i = 0; i < 10; i++ ) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    }
+
     const handleClick = async () => {
         setIsActive(!isActive);
     }
@@ -36,10 +46,30 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             .post("/api/outcome/", payload)
             .then((res) => {
                 transaction.isFixOutcome = true;
-                setChangeColor(String(transaction.uoi))
+                setChangeColor(makeid())
                 console.log(transaction.uoi)
                 console.log(res);
             })
+    }
+
+    const handleDeleteOutgoing = (e) => {
+        console.log(transaction)
+        let payload = {
+            creditorName: transaction.creditor,
+            debtorName: transaction.debitor, 
+            amount: transaction.value,
+            creditor_iban: transaction.creditorIban,
+            debtor_iban: transaction.debtorIban,
+        }
+
+        axiosInstance
+                .post("api/deleteFixOutcome/" , payload)
+                .then((res) => {
+                    transaction.isFixOutcome = false;
+                    setChangeColor(makeid())
+                    console.log(res)
+                })
+
     }
 
     const handleSetIncomes = (e) => {
@@ -61,11 +91,49 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             .then((res) => {
                 transaction.isFixIncome = true;
                 //Trigger rerender of list:
-                setChangeColor(String(transaction.uoi))
+                setChangeColor(makeid())
                 console.log(res);
             })
     }
 
+    const renderDeleteInOut = () => {
+        const arr = []
+        if(transaction.isFixIncome) {
+            arr.push(
+                <div>
+                    <a onClick={handleDeleteIncomes} className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Fixe Einnahme entfernen</a>
+                </div>
+            )
+        }
+        else if(transaction.isFixOutcome) {
+            arr.push(
+                <div>
+                    <a onClick={handleDeleteOutgoing} className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Fixe Ausgabe entfernen</a>
+                </div>
+            )
+        }
+        
+        return arr
+    }
+
+    const handleDeleteIncomes = (e) => {
+        let payload = {
+            creditorName: transaction.creditor,
+            debtorName: transaction.debitor, 
+            amount: transaction.value,
+            creditor_iban: transaction.creditorIban,
+            debtor_iban: transaction.debtorIban,
+        }
+
+        axiosInstance
+            .post("api/deleteFixIncome/", payload)
+            .then((res) => {
+                transaction.isFixIncome = false;
+                //Trigger rerender of list:
+                setChangeColor(makeid())
+                console.log(res);
+            })
+    }
 
     const handleCheckboxChange = (e) => {
         // This function adds a transaction to transactionGroupIntermediate (and deletes old ones)
@@ -85,7 +153,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         }
 
 
-        if(e.target.value == "") {
+        if(e.target.value === "") {
             //Wenn die value null ist, dann soll keine gruppierung vorgenommen werden
             transaction.group = null;
         }else{
@@ -107,7 +175,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
                     setCheckNone(false);
                     transaction.group = groupName;
                     //Change the color to a group color:
-                    setChangeColor(groupName)
+                    setChangeColor(makeid())
                 })
                 
         }
@@ -167,7 +235,6 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             .then((res) => {
                 let categoriesMin = categories.filter(el => el.id !== id)
                 setCategories(categoriesMin)
-                console.log(res)
             })
     }
 
@@ -183,8 +250,13 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             .post("/api/group/", payload)
             .then((res) => {
                 console.log(res);
+                console.log(categories)
                 // Push name to frontend array
-                setCategories((categories) => [...categories, res.data.name])
+                let newCategories ={
+                    id: 12,
+                    name: res.data.name
+                };
+                setCategories((categories) => [...categories, newCategories])
                 updateAddData(initialAddData)
             })
 
@@ -205,8 +277,9 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         {isActive && (
         <div className="absolute right-0 z-10 mt-11 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
             <div className="py-1" role="none">
-                <a onClick={handleSetIncomes} className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-0">Markieren als monatl. Einnahme</a>
-                <a onClick={handleSetOutgoings} className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Markieren als monatl. Ausgabe</a>
+                <a onClick={handleSetIncomes} href="fix" className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-0">Markieren als monatl. Einnahme</a>
+                <a onClick={handleSetOutgoings} href="fix" className="cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" role="menuitem" tabindex="-1" id="menu-item-1">Markieren als monatl. Ausgabe</a>
+                {renderDeleteInOut()}
                 <button type="button" onClick={handleLowClick} className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100">
                     <BsArrowLeftShort size="20" />Kategorisieren
                 </button>
