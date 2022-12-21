@@ -253,7 +253,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
                 console.log(categories)
                 // Push name to frontend array
                 let newCategories ={
-                    id: 12,
+                    id: res.data.id,
                     name: res.data.name
                 };
                 setCategories((categories) => [...categories, newCategories])
