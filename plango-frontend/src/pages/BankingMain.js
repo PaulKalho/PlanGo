@@ -12,6 +12,7 @@ function BankingMain() {
     const [loading, setLoading] = useState(false);
     const [transactions, setTransactions] = useState([""])
     const [categories, setCategories] = useState([])
+    const [budget, setBudget] = useState()
     useEffect(() => {
         const fetchData = async () => {
 
@@ -46,6 +47,15 @@ function BankingMain() {
                         }) 
 
                         setTransactions(arr);
+                    })
+                }).then(() => {
+                    let payloadBudget = {
+                        "id": accountId-1,
+                    }
+                    // Get the Budget from the api, AFTER the transactions where loaded!!
+                    axiosInstance.post("api/bank/budget/", payloadBudget).then((res) => {
+                        console.log(res.data.budget)
+                        setBudget(res.data.budget)
                     })
                 }).catch(err => {
                     console.log(err);
@@ -93,7 +103,7 @@ function BankingMain() {
                     Transaktionen
                 </Link>
             </Breadcrumbs>
-            <Overview />
+            <Overview budget={budget}/>
             <TransactionList transactions={transactions} loading={loading} categories={categories} setCategories={setCategories}/>
         </div>
     )

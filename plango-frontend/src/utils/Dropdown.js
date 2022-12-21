@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import axiosInstance from '../axios';
-import TransactionList from "../components/cashapp/TransactionList";
-import { BsArrowLeftShort, BsPlusLg } from "react-icons/bs"
-import { MenuItem } from "@material-tailwind/react";
+import { BsArrowLeftShort, BsPlusLg, BsFillTrashFill } from "react-icons/bs"
 
 function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[isActive, setIsActive] = useState(false)
@@ -125,16 +123,20 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         let noneActivated = true;
         categories.forEach(element => {
             activate = false;
-            if(element.name == transaction.group) {
+            if(element.name === transaction.group) {
                 activate = true
                 noneActivated = false;   
             }
 
             arr.push(
-                <div className={element.name != "hidden" ? "cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" : ""} hidden>
-                    <input type="radio" name="groups" value={element.id + '#' + element.name} className="mx-2" onChange={handleCheckboxChange} defaultChecked={activate}></input>
-                    <label for="checkbox-input" >{element.name}</label>
+                <div>
+                    <div className={element.name !== "hidden" ? "cursor-pointer text-gray-700 hover:bg-cyan-200 block px-4 py-2 text-sm" : ""} hidden>
+                        <input type="radio" name="groups" value={element.id + '#' + element.name} className="mx-2" onChange={handleCheckboxChange} defaultChecked={activate}></input>
+                        <label for="checkbox-input" >{element.name}</label>
+                    </div>
+                    <div onClick={() => handleDeleteGroup(element.id)}><BsFillTrashFill size={15}/></div>
                 </div>
+
             )
         });
         arr.push(
@@ -152,6 +154,21 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             ...addData,
             [e.target.name]: e.target.value.trim(),
         })
+    }
+
+
+    function handleDeleteGroup(id) {
+        // Diese Funktion soll Gruppen löschen können:
+        // Works
+        console.log(id)
+
+        axiosInstance
+            .delete("/api/group/" + id + "/")
+            .then((res) => {
+                let categoriesMin = categories.filter(el => el.id !== id)
+                setCategories(categoriesMin)
+                console.log(res)
+            })
     }
 
     const handleAddGroup = (e) => {

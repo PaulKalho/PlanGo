@@ -10,6 +10,7 @@ from marshmallow import Schema, fields
 from .ParseTransactions import ParseTransaction
 
 from datetime import datetime
+import calendar
 import os
 import uuid
 import hashlib
@@ -18,13 +19,15 @@ class Nordigen:
 
     # Cunstructor 
     def __init__(self, secret_id, secret_key):
-        self.secret_id = secret_id
-        self.secret_key = secret_key
-        self.apiKey = "",
+        self._secret_id = secret_id
+        self._secret_key = secret_key
+        self._apiKey = ""
+        self._refresh= ""
+        self._requestHeaders = {}
+        # Transactions to be saved in Class for runtime improvements
+        self.transactions = None
         self.__generateApiKey()
 
-    # Private Functions: 
-    
     def __parseTransactions(self, transactions, user):
         """
         This function parses the Function to an json-array for the frontend and analyses it (isGroup, isTransaction)
@@ -191,8 +194,6 @@ class Nordigen:
             return transaction.get(attr)
         return None
 
-
-    # Public Functions:
     def __generateApiKey(self):
 
         """
@@ -202,8 +203,8 @@ class Nordigen:
         """
 
         dataS = {
-                "secret_id": self.secret_id,
-                "secret_key": self.secret_key
+                "secret_id": self._secret_id,
+                "secret_key": self._secret_key
         }
 
         #Make request tokens
@@ -213,12 +214,59 @@ class Nordigen:
         if r_status == 200:
             #This Data holds the access as well as the refresh tokens
             data = r.json()
-            self.apiKey = data["access"]
-        
+            self._apiKey = data["access"]
+            self._refresh = data["refresh"]
+            self._requestHeaders = {
+                "Authorization": "Bearer " + data["access"]
+            }
         else:
             #Token-Request failed
-            self.apiKey = None
+            self._apiKey = None
+            self._refresh = None
     
+    def __checkForFixOutcomes(self, user): 
+        """
+        This function checks self.transactions and checks which fixOutcomes have already been made
+        It returns the still open value which is still open that month.
+        This function only works for the active month!
+        """
+        fixOutcomes = FixAusgaben.objects.all().filter(created_by_id = user.id)
+        allTransactions = self.transactions["transactions"]["booked"]
+        totalFixOutcome = 0
+        alreadyPayed = 0
+        stillOpen = 0
+
+        currentYear = datetime.now().year
+        currentMonth = datetime.now().month
+
+        # Returns first and last day of the current Month like this (1,31) last day monthrange[1]
+        monthrange = calendar.monthrange(currentYear, currentMonth)
+
+        firstDayOfCurrentMonthAsDate = datetime(currentYear, currentMonth, 1)
+        lastDayOfCurrentMonthAsDate = datetime(currentYear, currentMonth, monthrange[1])
+        
+        for obj in fixOutcomes:
+            for transaction in allTransactions:
+                if(
+                    datetime.strptime(transaction.get("bookingDate"), "%Y-%m-%d") >= firstDayOfCurrentMonthAsDate and
+                    datetime.strptime(transaction.get("bookingDate"), "%Y-%m-%d") <= lastDayOfCurrentMonthAsDate and
+                    obj.creditor_iban == self.__getAttr(transaction, "creditorAccount")
+                    and obj.debtor_iban ==  self.__getAttr(transaction, "debtorAccount")
+                    and obj.creditorName == self.__getAttr(transaction, "creditorName")
+                    and obj.debtorName == self.__getAttr(transaction, "debtorName")
+                    and float(transaction.get("transactionAmount").get("amount")) < 0
+                ):
+                    alreadyPayed += float(transaction.get("transactionAmount").get("amount"))
+                    break
+                
+            totalFixOutcome += float(obj.amount)
+
+        stillOpen = totalFixOutcome - alreadyPayed
+        return stillOpen
+
+
+    # Public Functions:
+
     def getBank(self):
         """
         This function gets the Bank from NordigenAPI.
@@ -226,15 +274,8 @@ class Nordigen:
 
         :return: The response of all Banks
         """
-        response = Response()
-
-        # Get all Banks:
-        headers = {
-            "Authorization": "Bearer " + self.apiKey
-        }
-
         #Make request Banks
-        r = requests.get("https://ob.nordigen.com/api/v2/institutions/?country=de", headers=headers)
+        r = requests.get("https://ob.nordigen.com/api/v2/institutions/?country=de", headers=self._requestHeaders)
         r_status = r.status_code
             
         if r_status == 200:
@@ -253,13 +294,6 @@ class Nordigen:
 
         :return response: The response = contains the link
         """
-        response = Response()
-
-        #Headers auth headers (access token)
-        headers = {
-            "Authorization": "Bearer " + self.apiKey
-        }
-
         #Data to send
         #TODO: User mitsenden hier her ans frontend
         payload = {
@@ -268,7 +302,7 @@ class Nordigen:
         }
 
         #Make request tokens
-        r = requests.post("https://ob.nordigen.com/api/v2/requisitions/" , data=payload, headers=headers)
+        r = requests.post("https://ob.nordigen.com/api/v2/requisitions/" , data=payload, headers=self._requestHeaders)
         r_status = r.status_code
 
         #Handle token response
@@ -297,15 +331,6 @@ class Nordigen:
         
         :return response: The amount of accounts the user has.
         """
-        
-        access_token = self.apiKey
-        response = Response()
-
-        #Headers auth headers (access token)
-        headers = {
-            "Authorization": "Bearer " + access_token
-        }
-
         #Get id from db
         user = request.user
         row = Credentials.objects.get(user=user)
@@ -315,7 +340,7 @@ class Nordigen:
         #Get Accounts
         url = "https://ob.nordigen.com/api/v2/requisitions/" + id + "/"
 
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=self._requestHeaders)
         r_status = r.status_code
 
         #Handle response
@@ -333,6 +358,7 @@ class Nordigen:
 
         return response
 
+    # This function can be called to refresh the transactions!
     def list_transactions(self, request):
         """
         This is the final function in the workflow. It gets all transactions from Nordigen
@@ -341,40 +367,41 @@ class Nordigen:
 
         :return: Returns the jsonifyed transaction array
         """
-        access_token = self.apiKey
-        response = Response()
 
-        #Headers auth headers (access token)
-        headers = {
-            "Authorization": "Bearer " + access_token
-        }
+        if(self.transactions is None):  
+            #Now get accounts-id from DB with id (pos in array)
+                #First get the id and user from the request
+            id = request.data["id"]
+            user = request.user
 
-        #Now get accounts-id from DB with id (pos in array)
-            #First get the id and user from the request
-        id = request.data["id"]
-        user = request.user
+            row = Credentials.objects.get(user=user)
+            accounts = row.accounts
 
+            account_id = accounts[id]
 
-        row = Credentials.objects.get(user=user)
-        accounts = row.accounts
+            ##
 
-        account_id = accounts[id]
+            url = "https://ob.nordigen.com/api/v2/accounts/" + account_id + "/transactions/"
+            r = requests.get(url, headers=self._requestHeaders)
+            r_status = r.status_code
 
-        ##
+            if r_status == 200:
+                content = r.json()
 
-        url = "https://ob.nordigen.com/api/v2/accounts/" + account_id + "/transactions/"
-        r = requests.get(url, headers=headers)
-        r_status = r.status_code
+                #Save the raw transaction "content" in class-attribute -> Runtime improvements:
+                # We still need to parse because reload changes have to be noticed
+                self.transactions = content
 
-        if r_status == 200:
-            content = r.json()
+                # Parse Response(transaction) and only give important info back to frontend
+                content = self.__parseTransactions(content, request.user) # This is a json array: [{},{},{}]
+                
+                response = Response(data=content, status=status.HTTP_200_OK)
+            else:
+                raise ResponseException(status_code=r_status)
 
-            #Parse Response(transaction) and only give important info back to frontend
-            content = self.__parseTransactions(content, request.user) # This is a json array: [{},{},{}]
-
-            response = Response(data=content, status=status.HTTP_200_OK)
-        else:
-            raise ResponseException(status_code=r_status)
+        else: 
+            relContent = self.__parseTransactions(self.transactions, request.user)
+            response = Response(data=relContent, status=status.HTTP_200_OK)
 
         return response
 
@@ -387,14 +414,6 @@ class Nordigen:
 
         :response amount of accounts the user has
         """
-
-        access_token = self.apiKey
-        response = Response()
-
-        headers = {
-            "Authorization": "Bearer " + access_token
-        }
-
         #Get id from db
         user = request.user
         row = Credentials.objects.get(user=user)
@@ -403,7 +422,7 @@ class Nordigen:
         #Get Accounts
         url = "https://ob.nordigen.com/api/v2/requisitions/" + id + "/"
 
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=self._requestHeaders)
         r_status = r.status_code
 
         if r_status == 200:
@@ -419,24 +438,15 @@ class Nordigen:
 
     # Public Statistic Functions:
 
-    def budget(request):
+    def budget(self, request):
         """
         This function gets the montly budget, based on fixOutcomes
+        Gets the current balance, checks which fix Outcomes still open this month, then
+        substracts them from balance and then dividades that through open days that month
+
         :param: request
         :return: response
         """
-
-        access_token = request.session['access_token']
-        response = Response()
-
-        #Headers auth headers (access token)
-        headers = {
-            "Authorization": "Bearer " + access_token
-        }
-
-        #Now get accounts-id from DB with id (pos in array)
-            #First get the id and user from the request
-
         id = request.data["id"]
         user = request.user
         row = Credentials.objects.get(user=user)
@@ -446,21 +456,39 @@ class Nordigen:
 
         #Send request to NORDIGEN to get the Balance
         url = "https://ob.nordigen.com/api/v2/accounts/" + account_id + "/balances/"
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=self._requestHeaders)
         r_status = r.status_code
 
         if r_status == 200:
             content = r.json()
+            # Works for GLS but maybe not for other banks?!
+            # I want the balance of balanceType 'closingBooked'
+            # Its on [0] here
+            # TODO: Testing!
+            balance = content.get("balances")[0].get("balanceAmount").get("amount")
             # Now check which fixAusgaben have already been made this month:
+            stillOpen = self.__checkForFixOutcomes(request.user)
+            
+            currentYear = datetime.now().year
+            currentMonth = datetime.now().month
+            currentDay = datetime.now().day
 
-            allAusgaben = FixAusgaben.objects.get(user=user)
+            # Returns first and last day of the current Month like this (1,31) last day monthrange[1]
+            monthrange = calendar.monthrange(currentYear, currentMonth)
+            lastDayCurrentMonthAsDate = datetime(currentYear, currentMonth, monthrange[1])
+            today = datetime(currentYear, currentMonth, currentDay)
+            delta = (lastDayCurrentMonthAsDate - today)
 
-            # for obj in transactions:
-            #     test = "eints"
+            returnVal = ((float(balance) + (stillOpen)) / float(delta.days))
 
-            response = Response(data=content, status=status.HTTP_200_OK)
+            dataR = {
+                "budget": round(returnVal,2)
+            }
+            response = Response(data=dataR, status=status.HTTP_200_OK)
         else:
             raise ResponseException(status_code=r_status)
+        
+        return response
 
     def getBarData(self, request):
         """ 
@@ -469,14 +497,6 @@ class Nordigen:
         :param: The requested data -> { id: Account ID }
         :return: JSON: { income: xx.xx, expenses: xx.xx }
         """
-
-        access_token = self.apiKey
-        response = Response()
-
-        #Headers auth headers (access token)
-        headers = {
-            "Authorization": "Bearer " + access_token
-        }
 
         #Now get accounts-id from DB with id (pos in array)
             #First get the id and user from the request
@@ -491,7 +511,7 @@ class Nordigen:
 
         # Get the raw transaction Data
         url = "https://ob.nordigen.com/api/v2/accounts/" + account_id + "/transactions/"
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=self._requestHeaders)
         r_status = r.status_code 
 
         if r_status == 200:
@@ -514,6 +534,7 @@ class Nordigen:
                 "month": initDateStr,
                 "data": []
             }
+            
             resultArray.append(struct)
             i = 0
             ibooked = 0

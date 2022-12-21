@@ -6,7 +6,7 @@ import {Link} from "react-router-dom"
 
 
 
-function Overview () {
+function Overview ({budget}) {
   const[loading, setLoading] = useState(false);
   const[totalInc, setTotalInc] = useState(0);
   const[totalOut, setTotalOut] = useState(0);
@@ -77,7 +77,7 @@ function Overview () {
         <div className="p-5 border-black">
           <div className="border p-5 flex-col text-center">
             <h1>Restbudget pro Tag:</h1>
-            <div>30</div>
+            <div>{budget}</div>
             {/* Errechnet aus: (Kontostand - restliche FixAusgaben) / Restliche Tage im Monat */}
             {/* restliche Fixausgaben = fixAusgaben Tabelle - analyze alle Ausgaben diesen Monat(alle nicht erkannten) */}
           </div>

@@ -81,7 +81,6 @@ def check_accounts(request):
 @api_view(('POST', ))
 def budget(request):
     response = Response()
-
     response = nordigen.budget(request)
     return response
 
@@ -95,7 +94,7 @@ def getBarData(request):
     """
 
     response = Response()
-    nordigen.getBarData(request)
+    response = nordigen.getBarData(request)
     return response
 
 
