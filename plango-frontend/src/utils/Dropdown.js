@@ -1,6 +1,7 @@
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import axiosInstance from '../axios';
 import { BsArrowLeftShort, BsPlusLg, BsFillTrashFill } from "react-icons/bs"
+import NotificationContext from "../context/notificationContext";
 
 function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[isActive, setIsActive] = useState(false)
@@ -11,6 +12,8 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[addData, updateAddData] = useState(initialAddData);
     const[checkNone, setCheckNone] = useState(false);
     const[loading, setLoading] = useState(false);
+    const notificationCtx = useContext(NotificationContext)
+
 
     function makeid() {
         var result           = '';
@@ -29,7 +32,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         setIsLowActive(!isLowActive);
     }
 
-    const handleSetOutgoings = (e) => {
+    const handleSetOutgoings = async (e) => {
         // Eine neue Fixausgabe in Datenbank hinterlegen
         e.preventDefault();
 
@@ -42,18 +45,30 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             debtor_iban: transaction.debtorIban,
             transaction_date: transaction.date
         }
-
-        axiosInstance
-            .post("/api/outcome/", payload)
-            .then((res) => {
-                transaction.isFixOutcome = true;
-                setChangeColor(makeid())
-                console.log(transaction.uoi)
-                console.log(res);
-            })
+        
+        try{
+            setLoading(true);
+            await axiosInstance
+                .post("/api/outcome/", payload)
+                .then((res) => {
+                    transaction.isFixOutcome = true;
+                    setChangeColor(makeid())
+                    console.log(transaction.uoi)
+                    console.log(res);
+                    notificationCtx.success("Es wurde eine FixAusgabe hinzugefügt!");
+                    setLoading(false);
+                })
+        }catch(err) {
+            setLoading(false);
+            console.log(err);
+            notificationCtx.error("Beim hinzufügen ist etwas schiefgelaufen!");
+        }finally {
+            setLoading(false);
+        }
+        
     }
 
-    const handleDeleteOutgoing = (e) => {
+    const handleDeleteOutgoing = async () => {
         console.log(transaction)
         let payload = {
             creditorName: transaction.creditor,
@@ -63,13 +78,24 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             debtor_iban: transaction.debtorIban,
         }
 
-        axiosInstance
+        try {
+            setLoading(true)
+            await axiosInstance
                 .post("api/deleteFixOutcome/" , payload)
                 .then((res) => {
                     transaction.isFixOutcome = false;
                     setChangeColor(makeid())
-                    console.log(res)
+                    console.log(res);
+                    notificationCtx.success("Fixe Ausgabe wurde erfolgreich gelöscht!")
+                    setLoading(false);
                 })
+        }catch(err) {
+            notificationCtx.error("Beim Löschen ist etwas schiefgelaufen!");
+            setLoading(false);
+        }finally{
+            setLoading(false);
+        }
+        
 
     }
 
@@ -95,9 +121,12 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
                     //Trigger rerender of list:
                     setChangeColor(makeid())
                     console.log(res);
+                    notificationCtx.success("Es wurde eine FixEinnahme hinzugefügt!")
                 })  
         } catch (error) {
+            console.log(error)
             setLoading(false)
+            notificationCtx.error(error.response.data.non_field_errors);
             console.log(error)
         } finally {
             setLoading(false)
@@ -125,7 +154,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         return arr
     }
 
-    const handleDeleteIncomes = (e) => {
+    const handleDeleteIncomes = async () => {
         let payload = {
             creditorName: transaction.creditor,
             debtorName: transaction.debitor, 
@@ -134,31 +163,54 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             debtor_iban: transaction.debtorIban,
         }
 
-        axiosInstance
-            .post("api/deleteFixIncome/", payload)
-            .then((res) => {
-                transaction.isFixIncome = false;
-                //Trigger rerender of list:
-                setChangeColor(makeid())
-                console.log(res);
-            })
+        try {
+            setLoading(true)
+            await axiosInstance
+                .post("api/deleteFixIncome/", payload)
+                .then((res) => {
+                    transaction.isFixIncome = false;
+                    //Trigger rerender of list:
+                    setChangeColor(makeid())
+                    console.log(res);
+                    notificationCtx.success("FixAusgabe wurde erfolgreich gerlöscht!")
+                    setLoading(false)
+
+                })
+        }catch(err) {
+            notificationCtx.err("Beim Löschen ist etwas schiefgelaufen!")
+            console.log(err);
+            setLoading(false);
+        }finally {
+            setLoading(false);
+        }
+        
     }
 
-    const handleCheckboxChange = (e) => {
+    const handleCheckboxChange = async (e) => {
         // This function adds a transaction to transactionGroupIntermediate (and deletes old ones)
         // Cannot be async beacaus if path has to be run first
-            // TODO: FIX WITH AWAIT 
         
         if(transaction.group != null) {
             //Delete old group path
             const payload = {
                 uoi: transaction.uoi
             }
-            axiosInstance
-                .post("api/deleteTransactionIntermediate/", payload)
-                .then((res) => {
-                    console.log("SUCCESS")
-                })
+
+            try {
+                setLoading(true)
+                await axiosInstance
+                    .post("api/deleteTransactionIntermediate/", payload)
+                    .then((res) => {
+                        //Old GroupIntermediate deleted!
+                        setLoading(false)
+                    })
+            }catch(err) {
+                console.log(err);
+                setLoading(false)
+            }finally {
+                setLoading(false)
+            }
+            
         }
 
 
@@ -177,15 +229,25 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
                 group: groupId,
             }
         
-        
-            axiosInstance
-                .post("/api/transactionGroup/", payload)
-                .then((res) => {
-                    setCheckNone(false);
-                    transaction.group = groupName;
-                    //Change the color to a group color:
-                    setChangeColor(makeid())
-                })
+            try {
+                setLoading(true);
+                await axiosInstance
+                    .post("/api/transactionGroup/", payload)
+                    .then((res) => {
+                        setCheckNone(false);
+                        transaction.group = groupName;
+                        //Change the color to a group color:
+                        setChangeColor(makeid())
+                        notificationCtx.success("Die Transaktion wurde gruppiert!")
+                    })
+            }catch(err) {
+                console.log(err);
+                setLoading(false);
+                notificationCtx.error(err.message);
+            }finally {
+                setLoading(false);
+            }
+            
                 
         }
 
@@ -232,20 +294,32 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     }
 
 
-    function handleDeleteGroup(id) {
+    async function handleDeleteGroup (id) {
         // Diese Funktion soll Gruppen löschen können:
         // Works
         console.log(id)
 
-        axiosInstance
-            .delete("/api/group/" + id + "/")
-            .then((res) => {
-                let categoriesMin = categories.filter(el => el.id !== id)
-                setCategories(categoriesMin)
-            })
+        try{
+            setLoading(true)
+            await axiosInstance
+                .delete("/api/group/" + id + "/")
+                .then((res) => {
+                    let categoriesMin = categories.filter(el => el.id !== id)
+                    setCategories(categoriesMin)
+                    notificationCtx.success("Gruppe efolgreich gelöscht!")
+                    setLoading(false)
+                })
+        }catch(err) {
+            console.log(err);
+            notificationCtx.error(err.message);
+            setLoading(false);
+        }finally {
+            setLoading(false);
+        }
+        
     }
 
-    const handleAddGroup = (e) => {
+    const handleAddGroup = async (e) => {
         e.preventDefault();
         // updateAddData(initialAddData)
 
@@ -253,11 +327,11 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             name: addData.name
         }
 
-        axiosInstance
+        try {
+            setLoading(true)
+            await axiosInstance
             .post("/api/group/", payload)
             .then((res) => {
-                console.log(res);
-                console.log(categories)
                 // Push name to frontend array
                 let newCategories ={
                     id: res.data.id,
@@ -265,8 +339,17 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
                 };
                 setCategories((categories) => [...categories, newCategories])
                 updateAddData(initialAddData)
+                notificationCtx.success("Gruppe wurde erfolgreich hinzugefügt")
+                setLoading(false)
             })
-
+        } catch(err) {
+            console.log(err)
+            notificationCtx.error(err.message)
+            setLoading(false)
+        } finally {
+            setLoading(false)
+        }
+        
     
     }
 

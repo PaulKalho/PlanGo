@@ -11,8 +11,6 @@ function App() {
         <NotificationBar />
         <AppRouter/>
       </NotificationProvider>
-      {/* <Error msg="Test" /> */}
-      {/* <Success msg="Test" /> */}
     </div>
   );
 }
