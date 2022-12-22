@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { useEffect } from "react";
 import axiosInstance from "../../axios"
-import { BsFillPieChartFill } from "react-icons/bs"
+import { BsFillPieChartFill, BsArrowBarRight } from "react-icons/bs"
 import {Link} from "react-router-dom"
 
 
@@ -58,28 +58,28 @@ function Overview ({budget}) {
 
   return (
     <div className="flex flex-row border-solid">
-        <div className="border p-5 flex flex-col text-center">
-            <h1>Fixe Ausgaben:</h1>
-            <div>{totalOut}</div>
+        <div className="p-5 border-black ">
+          <div className="border p-5 flex flex-col text-center rounded-md bg-red-400">
+              <h1>Fixe Ausgaben:</h1>
+              <div className="font-bold">{totalOut}</div>
+          </div>
         </div>
         <div className="p-5 border-black">
-            <div className="border p-5 flex flex-col text-center">
+            <div className="border p-5 flex flex-col text-center rounded-md bg-green-400">
                 <h1>Fixe Einnahmen:</h1>
-                <div>{totalInc}</div>
+                <div className="font-bold">{totalInc}</div>
             </div>
         </div>
         <Link to="statistik" className="p-5 border-black">
-            <div className="border p-5 flex flex-col text-center">
-                <h1>Statistiken:</h1>
-                <div><BsFillPieChartFill size={30}/></div>
+            <div className="border p-5 flex flex-col text-center rounded-md">
+                <div className="flex flex-row items-center"><h1>Statistiken </h1><BsArrowBarRight size={20}/></div>
+                <div className="mx-auto"><BsFillPieChartFill size={25}/></div>
             </div>
         </Link>
         <div className="p-5 border-black">
-          <div className="border p-5 flex-col text-center">
+          <div className="border p-5 flex-col text-center rounded-md">
             <h1>Restbudget pro Tag:</h1>
-            <div>{budget}</div>
-            {/* Errechnet aus: (Kontostand - restliche FixAusgaben) / Restliche Tage im Monat */}
-            {/* restliche Fixausgaben = fixAusgaben Tabelle - analyze alle Ausgaben diesen Monat(alle nicht erkannten) */}
+            <div className="font-bold">{budget}</div>
           </div>
         </div>
     </div>
