@@ -10,6 +10,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     });
     const[addData, updateAddData] = useState(initialAddData);
     const[checkNone, setCheckNone] = useState(false);
+    const[loading, setLoading] = useState(false);
 
     function makeid() {
         var result           = '';
@@ -72,7 +73,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
 
     }
 
-    const handleSetIncomes = (e) => {
+    const handleSetIncomes = async (e) => {
         // Eine neue Fixeinnahme in Datenbank hinterlegen
         e.preventDefault();
 
@@ -85,15 +86,23 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             debtor_iban: transaction.debtorIban,
             transaction_date: transaction.date
         }
-
-        axiosInstance
-            .post("/api/income/", payload)
-            .then((res) => {
-                transaction.isFixIncome = true;
-                //Trigger rerender of list:
-                setChangeColor(makeid())
-                console.log(res);
-            })
+        try {
+            setLoading(true)
+            await axiosInstance
+                .post("/api/income/", payload)
+                .then((res) => {
+                    transaction.isFixIncome = true;
+                    //Trigger rerender of list:
+                    setChangeColor(makeid())
+                    console.log(res);
+                })  
+        } catch (error) {
+            setLoading(false)
+            console.log(error)
+        } finally {
+            setLoading(false)
+        }
+        
     }
 
     const renderDeleteInOut = () => {
@@ -214,8 +223,6 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         </div>)
         return arr
     }
-
-    // Add Data
     
     const handleChange = (e) => {
         updateAddData({
