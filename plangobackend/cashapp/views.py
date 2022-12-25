@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.decorators import api_view, renderer_classes, action
 from rest_framework import status
 from rest_framework.response import Response
 from .ResponseException import ResponseException
@@ -23,6 +23,32 @@ class FixOutcomeView(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         #Save new entry
         serializer.save(created_by = self.request.user)
+    
+    @action(detail = False, methods=['POST'], name="Delete By")
+    def deleteBy(self, request):
+        """
+        This function is used to delete a entry from fixIncome by its uoi
+
+        :request: The sent request { 
+                creditorName: 
+                debtorName:  
+                amount: 
+                creditor_iban: 
+                debtor_iban:
+                }
+
+        :response: 200 OKAY
+        """
+        FixAusgaben.objects.get(
+                                creditorName = request.data["creditorName"],
+                                debtorName = request.data["debtorName"],
+                                amount = request.data["amount"],
+                                creditor_iban  = request.data["creditor_iban"],
+                                debtor_iban = request.data["debtor_iban"],
+                                created_by = request.user
+                            ).delete()
+        return Response(status=status.HTTP_200_OK)
+
 
 
 class FixIncomeView(viewsets.ModelViewSet):
@@ -36,6 +62,32 @@ class FixIncomeView(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         #Save new entry
         serializer.save(created_by = self.request.user)
+
+    @action(detail = False, methods=['POST'], name="Delete By")
+    def deleteBy(self, request):
+        """
+        This function is used to delete a entry from fixIncome by its uoi
+
+        :request: The sent request { 
+                creditorName: 
+                debtorName:  
+                amount: 
+                creditor_iban: 
+                debtor_iban:
+                }
+
+        :response: 200 OKAY
+        """
+        FixIncome.objects.get(
+                                creditorName = request.data["creditorName"],
+                                debtorName = request.data["debtorName"],
+                                amount = request.data["amount"],
+                                creditor_iban  = request.data["creditor_iban"],
+                                debtor_iban = request.data["debtor_iban"],
+                                created_by = request.user
+                            ).delete()
+        return Response(status=status.HTTP_200_OK)
+
 
 class GroupView(viewsets.ModelViewSet):
     queryset = Group.objects.all()
@@ -56,70 +108,18 @@ class TransactionGroupIntermediateView(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         return serializer.save(created_by = self.request.user)
+    
+    def deleteBy(request):
+        """
+        This function is used to delete a entry from transactiongroupintermediate by its uoi
 
-@api_view(('POST',))
-def delete_by_uoi(request):
-    """
-    This function is used to delete a entry from transactiongroupintermediate by its uoi
+        :request: The sent request { uoi: "uoi"}
 
-    :request: The sent request { uoi: "uoi"}
-
-    :response: 200 OKAY
-    """
-    # TODO: Catch Error not found!
-    TransactionGroupIntermediate.objects.get(transaction_id = request.data["uoi"]).delete()
-    return Response(status=status.HTTP_200_OK)
-
-@api_view(('POST', ))
-def delete_income_by(request):
-    """
-    This function is used to delete a entry from fixIncome by its uoi
-
-    :request: The sent request { 
-            creditorName: 
-            debtorName:  
-            amount: 
-            creditor_iban: 
-            debtor_iban:
-            }
-
-    :response: 200 OKAY
-    """
-    FixIncome.objects.get(
-                            creditorName = request.data["creditorName"],
-                            debtorName = request.data["debtorName"],
-                            amount = request.data["amount"],
-                            creditor_iban  = request.data["creditor_iban"],
-                            debtor_iban = request.data["debtor_iban"],
-                            created_by = request.user
-                        ).delete()
-    return Response(status=status.HTTP_200_OK)
-
-
-@api_view(('POST', ))
-def delete_outcome_by(request):
-    """
-    This function is used to delete a entry from fixIncome by its uoi
-
-    :request: The sent request { 
-            creditorName: 
-            debtorName:  
-            amount: 
-            creditor_iban: 
-            debtor_iban:
-            }
-
-    :response: 200 OKAY
-    """
-    FixAusgaben.objects.get(
-                            creditorName = request.data["creditorName"],
-                            debtorName = request.data["debtorName"],
-                            amount = request.data["amount"],
-                            creditor_iban  = request.data["creditor_iban"],
-                            debtor_iban = request.data["debtor_iban"],
-                            created_by = request.user
-                        ).delete()
-    return Response(status=status.HTTP_200_OK)
+        :response: 200 OKAY
+        """
+        # TODO: Catch Error not found!
+        TransactionGroupIntermediate.objects.get(transaction_id = request.data["uoi"]).delete()
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(('GET',))

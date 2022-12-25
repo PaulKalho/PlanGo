@@ -12,16 +12,14 @@ class Model {
     //Methods
     async findAll() {
         //Diese Funktion gettet alle Daten aus einer Datenbank
-        try {
-            await this.api.get(this.endpoint)
-            .then(res => {     
-                this.table[this.listName] = res.data;
-            })
-        } catch {
-            
-        } finally {
-
-        }
+        await this.api.get(this.endpoint)
+        .then(res => {     
+            this.table[this.listName] = res.data;
+        })
+        .catch(err => {
+            console.log(err);
+            throw new Error("Etwas ist schiefgelaufen");
+        })
         
     }
 
@@ -35,14 +33,38 @@ class Model {
         
     }
 
-    async insert(url) {
+    async insert(payload) {
+        await this.api.post(this.endpoint, payload)
+                .then(res => {
+                    //Es wird das hinzugefügte Objekt zurückgegeben
+                    this.table[this.objName] = res.data
+                })
+                .catch(err => {
+                    console.log(err)
+                    throw new Error("Etwas ist schiefgelaufen");
+                })
+    }
 
+    async deleteOne(id) {
+        //Delte by one by id
+    }
+
+    async deleteBy(payload) {
+        //Delete by Payload
+        await this.api.post(this.endpoint + "deleteBy/", payload)
+                    .catch((err) => {
+                        console.log(err)
+                        throw new Error("Etwas ist schiefgelaufen");
+                    })
     }
 
     async runProcedure(id_acc) {
         await this.api.post(this.endpoint, {id: id_acc}) 
                 .then(res => {
                     this.table[this.listName] = res.data;
+                })
+                .catch((err) => {
+                    console.log(err);
                 })
     }
 

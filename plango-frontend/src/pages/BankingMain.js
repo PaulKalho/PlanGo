@@ -22,12 +22,13 @@ function BankingMain() {
     const [budget, setBudget] = useState()
     const notificationCtx = useContext(NotificationContext);
 
+    //Modells:
+    const Group = new m_Group();
+    const Budget = new m_Budget();
+    const Transactions = new m_Transaction();
     
     useEffect(() => {
-        const Group = new m_Group();
-        const Budget = new m_Budget();
-        const Transactions = new m_Transaction();
-
+        
         const initialize = async () => {
             try{
                 setLoading(true)
@@ -49,7 +50,7 @@ function BankingMain() {
         }
         
         initialize();
-    }, [accountId, notificationCtx]);
+    }, []);
     return (
         <div>
             <NavbarMain />

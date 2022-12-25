@@ -21,6 +21,14 @@ class m_FixOutcome {
         return this.m_FixOutcomeTable.findBy()
     }
 
+    async m_FixOutcome_insert(payload) {
+        return this.m_FixOutcomeTable.insert(payload)
+    }
+
+    async m_FixOutcome_deleteBy(payload) {
+        return this.m_FixOutcomeTable.deleteBy(payload)
+    }
+
     m_FixOutcome_Sum() {
         var sum = 0.0
         this.m_FixOutcome_List.map((el) => (

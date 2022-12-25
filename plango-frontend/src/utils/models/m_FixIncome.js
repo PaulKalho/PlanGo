@@ -21,6 +21,14 @@ class m_FixIncome {
         return this.m_FixIncomeTable.findBy()
     }
 
+    async m_FixIncome_insert(payload) {
+        return this.m_FixIncomeTable.insert(payload)
+    }
+
+    async m_FixIncome_deleteBy(payload) {
+        return this.m_FixIncomeTable.deleteBy(payload)
+    }
+
     m_FixIncome_Sum() {
         var sum = 0.0
         this.m_FixIncome_List.map((el) => (

@@ -3,6 +3,10 @@ import axiosInstance from '../axios';
 import { BsArrowLeftShort, BsPlusLg, BsFillTrashFill } from "react-icons/bs"
 import NotificationContext from "../context/notificationContext";
 
+import m_Group from "./models/m_Group";
+import m_FixIncome from "./models/m_FixIncome";
+import m_FixOutcome from "./models/m_FixOutcome";
+
 function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[isActive, setIsActive] = useState(false)
     const[isLowActive, setIsLowActive] = useState(false)
@@ -12,7 +16,12 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[addData, updateAddData] = useState(initialAddData);
     const[checkNone, setCheckNone] = useState(false);
     const[loading, setLoading] = useState(false);
-    const notificationCtx = useContext(NotificationContext)
+    const notificationCtx = useContext(NotificationContext);
+
+    // Models
+    const Group = new m_Group();
+    const Income = new m_FixIncome();
+    const Outcome = new m_FixOutcome();
 
 
     function makeid() {
@@ -45,27 +54,18 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             debtor_iban: transaction.debtorIban,
             transaction_date: transaction.date
         }
-        
-        try{
+
+        try {
             setLoading(true);
-            await axiosInstance
-                .post("/api/outcome/", payload)
-                .then((res) => {
-                    transaction.isFixOutcome = true;
-                    setChangeColor(makeid())
-                    console.log(transaction.uoi)
-                    console.log(res);
-                    notificationCtx.success("Es wurde eine FixAusgabe hinzugefügt!");
-                    setLoading(false);
-                })
-        }catch(err) {
-            setLoading(false);
-            console.log(err);
+            await Outcome.m_FixOutcome_insert(payload);
+            transaction.isFixOutcome = true;
+            setChangeColor(makeid())
+            notificationCtx.success("Es wurde eine FixAusgabe hinzugefügt!");
+        } catch (error) {
             notificationCtx.error("Beim hinzufügen ist etwas schiefgelaufen!");
-        }finally {
+        } finally {
             setLoading(false);
         }
-        
     }
 
     const handleDeleteOutgoing = async () => {
@@ -79,23 +79,15 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         }
 
         try {
-            setLoading(true)
-            await axiosInstance
-                .post("api/deleteFixOutcome/" , payload)
-                .then((res) => {
-                    transaction.isFixOutcome = false;
-                    setChangeColor(makeid())
-                    console.log(res);
-                    notificationCtx.success("Fixe Ausgabe wurde erfolgreich gelöscht!")
-                    setLoading(false);
-                })
-        }catch(err) {
+            await Outcome.m_FixOutcome_deleteOne(payload);
+            transaction.isFixOutcome = false;
+            setChangeColor(makeid());
+            notificationCtx.success("Fixe Ausgabe wurde erfolgreich gelöscht!")
+        } catch (error) {
             notificationCtx.error("Beim Löschen ist etwas schiefgelaufen!");
+        } finally {
             setLoading(false);
-        }finally{
-            setLoading(false);
-        }
-        
+        }    
 
     }
 
@@ -112,22 +104,16 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             debtor_iban: transaction.debtorIban,
             transaction_date: transaction.date
         }
+
         try {
             setLoading(true)
-            await axiosInstance
-                .post("/api/income/", payload)
-                .then((res) => {
-                    transaction.isFixIncome = true;
-                    //Trigger rerender of list:
-                    setChangeColor(makeid())
-                    console.log(res);
-                    notificationCtx.success("Es wurde eine FixEinnahme hinzugefügt!")
-                })  
+            await Income.m_FixIncome_insert(payload);
+            transaction.isFixIncome = true;
+            //Trigger rerender of list:
+            setChangeColor(makeid())
+            notificationCtx.success("Es wurde eine FixEinnahme hinzugefügt!")
         } catch (error) {
-            console.log(error)
-            setLoading(false)
             notificationCtx.error(error.response.data.non_field_errors);
-            console.log(error)
         } finally {
             setLoading(false)
         }
@@ -161,6 +147,14 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
             amount: transaction.value,
             creditor_iban: transaction.creditorIban,
             debtor_iban: transaction.debtorIban,
+        }
+
+        try {
+            setLoading(true)
+        } catch (error) {
+
+        } finally {
+            setLoading(false)
         }
 
         try {

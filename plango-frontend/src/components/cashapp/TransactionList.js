@@ -2,9 +2,11 @@ import React, {useState} from "react"
 import GridLoader from "react-spinners/GridLoader"
 import Dropdown from "../../utils/Dropdown";
 
+
 function TransactionList ({transactions , loading, categories, setCategories}) {
-    //4 Options: fixAusgabe, fixEinnahme, kategorisiert, standart
-    const [changeColor, setChangeColor] = useState("")
+    //Wird genutzt um die Farbe einer Transaktion zu changen
+    const [changeColor, setChangeColor] = useState("");
+
     if(!loading) {
         return (
             <div>
