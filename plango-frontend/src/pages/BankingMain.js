@@ -13,6 +13,7 @@ function BankingMain() {
     const [transactions, setTransactions] = useState([""])
     const [categories, setCategories] = useState([])
     const [budget, setBudget] = useState()
+    
     useEffect(() => {
         const fetchData = async () => {
 

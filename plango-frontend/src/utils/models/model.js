@@ -1,7 +1,7 @@
 import axiosInstance from "../../axios"
 
 class Model {
-    constructor(table, endpoint, listName, objName,apiInstance = axiosInstance) {
+    constructor(table, endpoint, listName, objName = null,apiInstance = axiosInstance) {
         this.api = apiInstance
         this.table = table
         this.endpoint = endpoint
@@ -23,7 +23,6 @@ class Model {
 
         }
         
-       
     }
 
     async findBy(payload) {
@@ -40,9 +39,12 @@ class Model {
 
     }
 
-
-
-
+    async runProcedure(id_acc) {
+        await this.api.post(this.endpoint, {id: id_acc}) 
+                .then(res => {
+                    this.table[this.listName] = res.data;
+                })
+    }
 
 }
 

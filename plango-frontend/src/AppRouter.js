@@ -7,7 +7,6 @@ import PublicRoutes from "./utils/PublicRoutes";
 //Components
 
 import HomePage from './pages/HomePage'
-import TestPage from "./pages/TestPage";
 import Dashboard from "./pages/Dashboard";
 import RegisterPage from "./pages/RegisterPage";
 import BankingIntro from "./pages/BankingIntro";
@@ -24,7 +23,6 @@ function AppRouter() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/register" element={ <RegisterPage />} />
             </Route>
-            <Route path="/test" element={ <TestPage />} />
             <Route element= {<PrivateRoutes />}>
                 <Route path="/dashboard" element={ <Dashboard />} exact />
                 <Route path="/dashboard/cash" element= { <BankingIntro /> } exact />

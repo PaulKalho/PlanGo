@@ -1,6 +1,4 @@
 import React, { Component } from "react"
-import { useEffect } from "react";
-import axiosInstance from "../../axios"
 import { BsFillPieChartFill, BsArrowBarRight } from "react-icons/bs"
 import {Link} from "react-router-dom"
 
@@ -57,10 +55,12 @@ export default class Overview extends Component {
         <div className="p-5 border-black">
           <div className="border p-5 flex-col text-center rounded-md">
             <h1>Restbudget pro Tag:</h1>
-            {/* <div className="font-bold">{budget}</div> */}
+            <div className="font-bold">{this.props.budget}</div>
           </div>
         </div>
       </div>
     )
   }
 }
+
+
