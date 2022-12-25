@@ -7,7 +7,6 @@ import NotificationContext from "../context/notificationContext";
 
 function Dashboard() {
     const [error, setError] = useState([])
-    const notificationCtx = useContext(NotificationContext)
     return(
         <div>
             {/* {notificationCtx.success("erfolgreich hinzugefügt")} */}
@@ -20,15 +19,6 @@ function Dashboard() {
                         <ToDo />
                         <div className="col-span-full">
                             <Apps setErrors={setError}/>
-                            <div onClick={() => {
-                                notificationCtx.error("test")
-                            }}>TEST</div>
-                            <div onClick={() => {
-                                notificationCtx.clear()
-                            }}>TEST2</div>
-                            <div onClick={() => {
-                                notificationCtx.success("Success")
-                            }}>SUCCESS</div>
                         </div>
                     </div>
                 </div>

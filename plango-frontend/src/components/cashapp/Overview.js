@@ -14,6 +14,7 @@ export default class Overview extends Component {
       // Models:
       FixOutcome: new m_FixOutcome(),
       FixIncome: new m_FixIncome(),
+      //Other States
       loading: false
     }
   }

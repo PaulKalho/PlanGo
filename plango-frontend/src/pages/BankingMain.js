@@ -6,86 +6,96 @@ import Overview from "../components/cashapp/Overview";
 import TransactionList from "../components/cashapp/TransactionList";
 import NavbarMain from "../components/main/NavbarMain";
 
+
+// import React, { Component } from 'react'
+import m_Group from "../utils/models/m_Group";
+import m_Budget from "../utils/models/procedures/m_Budget";
+import m_Transaction from "../utils/models/procedures/m_Transaction";
+
+// export default class BankingMain extends Component {
+//     constructor(props) {
+//         super(props);
+//         this.state = {
+//             //Models
+//             Categories: new m_Group(),
+//             Budget: new m_Budget(),
+//             Transactions: new m_Transaction(),
+
+//             //Other states
+//             loading: false,
+//             accountId: useParams()
+//         }
+//     }
+
+//     async componentDidMount() {
+//         // Init -> Load Data
+//         try{
+//             this.setState({loading: true});
+//             await this.state.Categories.m_Group_FindAll();
+//             await this.state.Transactions.m_Transaction_runProcedure(this.state.accountId - 1);
+//             //Budget has to be fetched after Transactions!
+//             await this.state.Budget.m_Budget_runProcedure(this.state.accountId - 1);
+//         }catch(error) {
+//             console.log(err)
+//         }finally {
+//             this.setState({loading: false})
+//         }
+//     }
+
+//     render() {
+//         return (
+//             <div>
+//                 <NavbarMain />
+//                 {/* GET ID FROM URL AND MACHE REQUEST */}
+//                 <Breadcrumbs className="bg-transparent">
+//                     <Link 
+//                         className="hover:underline bg-transparent"
+//                         to="/dashboard/cash/accounts/"
+//                     >
+//                         Accounts wählen
+//                     </Link>
+//                     <Link                        
+//                         className="hover:underline font-bold"
+//                     >
+//                         Transaktionen
+//                     </Link>
+//                 </Breadcrumbs>
+//                 <Overview budget={this.state.Budget.m_Budget_Data.budget}/>
+//                 <TransactionList transactions={this.state.Transactions} loading={loading} categories={categories} setCategories={setCategories}/>
+//             </div>
+
+//         )
+//     }
+// }
+
+
 function BankingMain() {
 
     const { accountId } = useParams()
     const [loading, setLoading] = useState(false);
-    const [transactions, setTransactions] = useState([""])
+    const [transactions, setTransactions] = useState([])
     const [categories, setCategories] = useState([])
     const [budget, setBudget] = useState()
     
     useEffect(() => {
-        const fetchData = async () => {
+        const Group = new m_Group();
+        const Budget = new m_Budget();
+        const Transactions = new m_Transaction();
 
-            const payload = {
-                // accountId - 1 da im backend als arrayPos behandelt wird
-                "id": accountId-1,
-                "user": "tester"
-            }
-            
-            const arr = [];
-            try {
-                setLoading(true)
-                await axiosInstance.post("api/bank/transactions/", payload).then((res) => {
-                    console.log(res.data);
-                    // let data_array = res.data;
+        const initialize = async () => {
+            await Transactions.m_Transaction_runProcedure(accountId-1);
+            setTransactions(Transactions.m_Transaction_List);
 
-                    let resultBooked = res.data
-                    console.log(resultBooked);
-                    resultBooked.map((resultBooked) => {
-                        arr.push({
-                            uoi: resultBooked.uoi,
-                            date: resultBooked.date,
-                            creditor: resultBooked.creditor,
-                            debitor: resultBooked.debitor,
-                            creditorIban: resultBooked.creditorIban,
-                            debtorIban: resultBooked.debtorIban,
-                            value: resultBooked.value,
-                            mandateId: resultBooked.mandateId,
-                            isFixOutcome: resultBooked.isFixOutcome,
-                            isFixIncome: resultBooked.isFixIncome,
-                            group: resultBooked.group
-                        }) 
+            //Has to be called after Transactions:
+            await Budget.m_Budget_runProcedure(accountId-1);
+            setBudget(Budget.m_Budget_Data[0].budget);
 
-                        setTransactions(arr);
-                    })
-                }).then(() => {
-                    let payloadBudget = {
-                        "id": accountId-1,
-                    }
-                    // Get the Budget from the api, AFTER the transactions where loaded!!
-                    axiosInstance.post("api/bank/budget/", payloadBudget).then((res) => {
-                        console.log(res.data.budget);
-                        setBudget(res.data.budget);
-                    })
-                }).catch(err => {
-                    console.log(err);
-                });
-            } catch(err) {
-                console.log(err)
-                setLoading(false)
-            }
-            setLoading(false)  
+            await Group.m_Group_FindAll();
+            setCategories(Group.m_Group_List);
+
         }
-        const fetchAllCategories = async () => {
-            console.log("fetch")
-            axiosInstance
-                .get("/api/group/")
-                .then((res) => {
-                    let cat= [];
-                    res.data.forEach(element => {
-                        cat.push({
-                            id: element.id,
-                            name: element.name
-                        });
-                    })
-                    setCategories(cat);
-                    console.log(cat);
-                })  
-        }
-
-        fetchAllCategories();
-        fetchData();
+        
+        initialize();
     }, []);
     return (
         <div>

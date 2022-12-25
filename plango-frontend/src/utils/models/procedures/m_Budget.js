@@ -11,8 +11,8 @@ class m_Budget {
         )
     }
 
-    async m_FixOutcome_runProcedure(id_acc) {
-        return this.m_Budget.runProcedure()
+    async m_Budget_runProcedure(id_acc) {
+        return this.m_Budget.runProcedure(id_acc)
     }
 
 }
