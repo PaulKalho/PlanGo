@@ -1,12 +1,12 @@
-import React, { useContext, useState } from "react";
+import React from "react";
 import Apps from "../components/dashboard/Apps";
 import Calendar from "../components/dashboard/Calendar";
 import ToDo from "../components/dashboard/TodoList";
 import NavbarMain from "../components/main/NavbarMain";
-import NotificationContext from "../context/notificationContext";
+// import NotificationContext from "../context/notificationContext";
 
 function Dashboard() {
-    const [error, setError] = useState([])
+
     return(
         <div>
             {/* {notificationCtx.success("erfolgreich hinzugefügt")} */}
@@ -18,7 +18,7 @@ function Dashboard() {
                         <Calendar />
                         <ToDo />
                         <div className="col-span-full">
-                            <Apps setErrors={setError}/>
+                            <Apps/>
                         </div>
                     </div>
                 </div>

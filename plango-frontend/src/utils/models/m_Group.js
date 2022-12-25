@@ -5,7 +5,7 @@ class m_Group {
         this.m_Group_List = []
         this.m_GroupObj = {}
         this.m_apiEndpoint = process.env.REACT_APP_GROUP_ENDPOINT
-        this.m_FixOutcomeTable = new Model(
+        this.m_Group = new Model(
             this, 
             this.m_apiEndpoint,
             "m_Group_List",
