@@ -1,73 +1,51 @@
-import React, { useState } from "react"
+import React, { Component } from "react"
 import { useEffect } from "react";
 import axiosInstance from "../../axios"
 import { BsFillPieChartFill, BsArrowBarRight } from "react-icons/bs"
 import {Link} from "react-router-dom"
 
+//Models:
+import m_FixIncome from "../../utils/models/m_FixIncome";
+import m_FixOutcome from "../../utils/models/m_FixOutcome";
 
-
-function Overview ({budget}) {
-  const[loading, setLoading] = useState(false);
-  const[totalInc, setTotalInc] = useState(0);
-  const[totalOut, setTotalOut] = useState(0);
-
-  useEffect(() => {
-    // Load fixIncome and fixOutcome and calc total
-    const fetchData = async () => {
-      try{
-        await axiosInstance
-              .get("api/income/")
-              .then(res => {
-                console.log("Income:" + res);
-                let amount = 0;
-                let income = res.data
-                income.map((element) => {
-                  amount += parseFloat(element.amount)
-                })
-                setTotalInc(amount.toFixed(2));
-              })
-              .catch(err => {
-                console.log(err)
-              })
-        
-        await axiosInstance
-              .get("api/outcome/")
-              .then(res => {
-                console.log("Outcome:" + res.data);
-                const outcome = res.data
-
-                let amount = 0
-                outcome.map((element) => {
-                  amount += parseFloat(element.amount)
-                })
-
-                setTotalOut(amount.toFixed(2));
-              })
-              .catch(err => {
-                console.log(err)
-              })
-            
-      }catch(err){
-        console.log(err)
-        setLoading(false)
-      }
-      setLoading(false)
+export default class Overview extends Component {
+  
+  constructor(props) {
+    super(props);
+    this.state = {
+      // Models:
+      FixOutcome: new m_FixOutcome(),
+      FixIncome: new m_FixIncome(),
+      loading: false
     }
-    fetchData()
-  }, [])
+  }
 
-  return (
-    <div className="flex flex-row border-solid">
+  async componentDidMount() {
+    // Initializing -> load data
+    try {
+      this.setState({loading: true})
+      await this.state.FixIncome.m_FixIncome_FindAll()
+      await this.state.FixOutcome.m_FixOutcome_FindAll()
+    } catch (err) {
+      console.log(err)
+    } finally {
+      this.setState({loading: false})
+    }
+  }
+  
+  render() {
+    return (
+      <div className="flex flex-row border-solid">
         <div className="p-5 border-black ">
           <div className="border p-5 flex flex-col text-center rounded-md bg-red-400">
               <h1>Fixe Ausgaben:</h1>
-              <div className="font-bold">{totalOut}</div>
+              <div className="font-bold">{this.state.FixOutcome.m_FixOutcome_Sum()}</div>
           </div>
         </div>
         <div className="p-5 border-black">
             <div className="border p-5 flex flex-col text-center rounded-md bg-green-400">
                 <h1>Fixe Einnahmen:</h1>
-                <div className="font-bold">{totalInc}</div>
+                <div className="font-bold">{this.state.FixIncome.m_FixIncome_Sum()}</div>
             </div>
         </div>
         <Link to="statistik" className="p-5 border-black">
@@ -79,11 +57,10 @@ function Overview ({budget}) {
         <div className="p-5 border-black">
           <div className="border p-5 flex-col text-center rounded-md">
             <h1>Restbudget pro Tag:</h1>
-            <div className="font-bold">{budget}</div>
+            {/* <div className="font-bold">{budget}</div> */}
           </div>
         </div>
-    </div>
-  )
-};
-
-export default Overview;
+      </div>
+    )
+  }
+}

@@ -54,8 +54,8 @@ function BankingMain() {
                     }
                     // Get the Budget from the api, AFTER the transactions where loaded!!
                     axiosInstance.post("api/bank/budget/", payloadBudget).then((res) => {
-                        console.log(res.data.budget)
-                        setBudget(res.data.budget)
+                        console.log(res.data.budget);
+                        setBudget(res.data.budget);
                     })
                 }).catch(err => {
                     console.log(err);
