@@ -6,6 +6,7 @@ import NotificationContext from "../context/notificationContext";
 import m_Group from "./models/m_Group";
 import m_FixIncome from "./models/m_FixIncome";
 import m_FixOutcome from "./models/m_FixOutcome";
+import m_TransactionGroupIntermediate from "./models/m_TransacGroupIntermediate";
 
 function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const[isActive, setIsActive] = useState(false)
@@ -22,6 +23,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
     const Group = new m_Group();
     const Income = new m_FixIncome();
     const Outcome = new m_FixOutcome();
+    const TransactionGroup = new m_TransactionGroupIntermediate();
 
 
     function makeid() {
@@ -34,7 +36,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         return result;
     }
 
-    const handleClick = async () => {
+    const handleClick = () => {
         setIsActive(!isActive);
     }
     const handleLowClick = () => {
@@ -79,7 +81,7 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         }
 
         try {
-            await Outcome.m_FixOutcome_deleteOne(payload);
+            await Outcome.m_FixOutcome_deleteBy(payload);
             transaction.isFixOutcome = false;
             setChangeColor(makeid());
             notificationCtx.success("Fixe Ausgabe wurde erfolgreich gelöscht!")
@@ -150,40 +152,22 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
         }
 
         try {
-            setLoading(true)
+            setLoading(true);
+            await Income.m_FixIncome_deleteBy(payload);
+            transaction.isFixIncome = false;
+            setChangeColor(makeid());
+            notificationCtx.success("FixAusgabe wurde erfolgreich gerlöscht!")
         } catch (error) {
-
+            notificationCtx.error("Beim Löschen ist etwas schiefgelaufen!")
         } finally {
             setLoading(false)
-        }
-
-        try {
-            setLoading(true)
-            await axiosInstance
-                .post("api/deleteFixIncome/", payload)
-                .then((res) => {
-                    transaction.isFixIncome = false;
-                    //Trigger rerender of list:
-                    setChangeColor(makeid())
-                    console.log(res);
-                    notificationCtx.success("FixAusgabe wurde erfolgreich gerlöscht!")
-                    setLoading(false)
-
-                })
-        }catch(err) {
-            notificationCtx.err("Beim Löschen ist etwas schiefgelaufen!")
-            console.log(err);
-            setLoading(false);
-        }finally {
-            setLoading(false);
-        }
-        
+        }        
     }
 
     const handleCheckboxChange = async (e) => {
         // This function adds a transaction to transactionGroupIntermediate (and deletes old ones)
-        // Cannot be async beacaus if path has to be run first
-        
+        // TODO: notificationctx functionality hinzufügen
+
         if(transaction.group != null) {
             //Delete old group path
             const payload = {
@@ -192,21 +176,13 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
 
             try {
                 setLoading(true)
-                await axiosInstance
-                    .post("api/deleteTransactionIntermediate/", payload)
-                    .then((res) => {
-                        //Old GroupIntermediate deleted!
-                        setLoading(false)
-                    })
-            }catch(err) {
-                console.log(err);
-                setLoading(false)
-            }finally {
+                await TransactionGroup.m_TransactionGroupIntermediate_deleteBy(payload);
+            } catch(error) {
+                console.log(error);
+            } finally {
                 setLoading(false)
             }
-            
         }
-
 
         if(e.target.value === "") {
             //Wenn die value null ist, dann soll keine gruppierung vorgenommen werden
@@ -222,23 +198,20 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
                 amount: transaction.value,
                 group: groupId,
             }
-        
+
             try {
                 setLoading(true);
-                await axiosInstance
-                    .post("/api/transactionGroup/", payload)
-                    .then((res) => {
+                await TransactionGroup.m_TransactionGroupIntermediate_insert(payload)
+                    .then( () => {
                         setCheckNone(false);
                         transaction.group = groupName;
-                        //Change the color to a group color:
-                        setChangeColor(makeid())
-                        notificationCtx.success("Die Transaktion wurde gruppiert!")
+                        setChangeColor(makeid());
+                        notificationCtx.success("Die Transaktion wurde gruppiert!");
                     })
-            }catch(err) {
-                console.log(err);
-                setLoading(false);
-                notificationCtx.error(err.message);
-            }finally {
+    
+            } catch(error) {
+                notificationCtx.error("Beim Gruppieren ist etwas schiefgelaufen!");
+            } finally {
                 setLoading(false);
             }
             
@@ -290,61 +263,48 @@ function Dropdown ({transaction, categories, setCategories, setChangeColor}) {
 
     async function handleDeleteGroup (id) {
         // Diese Funktion soll Gruppen löschen können:
-        // Works
-        console.log(id)
-
         try{
-            setLoading(true)
-            await axiosInstance
-                .delete("/api/group/" + id + "/")
-                .then((res) => {
-                    let categoriesMin = categories.filter(el => el.id !== id)
-                    setCategories(categoriesMin)
-                    notificationCtx.success("Gruppe efolgreich gelöscht!")
-                    setLoading(false)
-                })
-        }catch(err) {
-            console.log(err);
-            notificationCtx.error(err.message);
-            setLoading(false);
+            setLoading(true);
+            await Group.m_Group_deleteOne(id)
+                    .then( () => {
+                        const categoriesMin = categories.filter(el => el.id !== id);
+                        setCategories(categoriesMin);
+                        notificationCtx.success("Gruppe erfolgreich gelöscht!")
+                    })
+        }catch (error) {
+            notificationCtx.error(error.message);
         }finally {
-            setLoading(false);
+            setLoading(false)
         }
         
     }
 
     const handleAddGroup = async (e) => {
         e.preventDefault();
-        // updateAddData(initialAddData)
 
         let payload = {
             name: addData.name
         }
 
         try {
-            setLoading(true)
-            await axiosInstance
-            .post("/api/group/", payload)
-            .then((res) => {
-                // Push name to frontend array
-                let newCategories ={
-                    id: res.data.id,
-                    name: res.data.name
-                };
-                setCategories((categories) => [...categories, newCategories])
-                updateAddData(initialAddData)
-                notificationCtx.success("Gruppe wurde erfolgreich hinzugefügt")
-                setLoading(false)
-            })
-        } catch(err) {
-            console.log(err)
-            notificationCtx.error(err.message)
-            setLoading(false)
+            setLoading(true);
+            await Group.m_Group_insert(payload)
+                .then(() => {
+                    let newCategories = {
+                        id: Group.m_GroupObj.id,
+                        name: Group.m_GroupObj.name
+                    }
+
+                    setCategories((categories) => [...categories, newCategories]);
+                    updateAddData(initialAddData)
+                    notificationCtx.success("Gruppe wurde erfolgreich hinzugefügt")
+                })
+        } catch (error) {
+            notificationCtx.error(error.message)
         } finally {
-            setLoading(false)
-        }
-        
-    
+            setLoading(false);
+        }        
+
     }
 
   return (

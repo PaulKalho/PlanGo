@@ -109,7 +109,8 @@ class TransactionGroupIntermediateView(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         return serializer.save(created_by = self.request.user)
     
-    def deleteBy(request):
+    @action(detail = False, methods=['POST'], name="Delete By")
+    def deleteBy(self, request):
         """
         This function is used to delete a entry from transactiongroupintermediate by its uoi
 

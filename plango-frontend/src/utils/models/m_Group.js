@@ -21,6 +21,18 @@ class m_Group {
         return this.m_Group.findBy()
     }
 
+    async m_Group_insert(payload) {
+        return this.m_Group.insert(payload)
+    }
+
+    async m_Group_deleteOne(id) {
+        return this.m_Group.deleteOne(id);
+    }
+
+    async m_Group_deleteBy(payload) {
+        return this.m_Group.deleteBy(payload)
+    }
+
 }
 
 export default m_Group

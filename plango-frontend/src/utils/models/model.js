@@ -1,6 +1,7 @@
 import axiosInstance from "../../axios"
 
 class Model {
+
     constructor(table, endpoint, listName, objName = null,apiInstance = axiosInstance) {
         this.api = apiInstance
         this.table = table
@@ -47,6 +48,10 @@ class Model {
 
     async deleteOne(id) {
         //Delte by one by id
+        await this.api.delete(this.endpoint + id + "/")
+                    .catch((err) => {
+                        throw new Error("Etwas ist schiefgelaufen!");
+                    })
     }
 
     async deleteBy(payload) {
