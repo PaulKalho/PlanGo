@@ -63,7 +63,7 @@ class Model {
                     })
     }
 
-    async runProcedure(id_acc) {
+    async runProcedure(id_acc = null) {
         await this.api.post(this.endpoint, {id: id_acc}) 
                 .then(res => {
                     this.table[this.listName] = res.data;

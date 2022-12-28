@@ -123,7 +123,9 @@ class TransactionGroupIntermediateView(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK)
 
 
-@api_view(('GET',))
+# Post bec. this is a procedure called from FE
+# The account ID will be necceary in the future anyways (Not same groups for different accs?!?!)
+@api_view(('POST',))
 def getPieData(request):
     """
     This function groups the transactionGroupIntermediate by month and group and then aggregates the values of

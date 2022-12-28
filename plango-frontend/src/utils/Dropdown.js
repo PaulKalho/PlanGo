@@ -1,5 +1,4 @@
 import React, { useState, useContext } from "react"
-import axiosInstance from '../axios';
 import { BsArrowLeftShort, BsPlusLg, BsFillTrashFill } from "react-icons/bs"
 import NotificationContext from "../context/notificationContext";
 

@@ -1,9 +1,16 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useContext } from "react"
 import axiosInstance from "../../axios";
 import NavbarMain from "../main/NavbarMain";
 import { Link, useParams } from "react-router-dom";
 import { Breadcrumbs } from "@material-tailwind/react";
 import 'chart.js/auto';
+import NotificationContext from "../../context/notificationContext";
+
+//Models 
+import m_BarData from "../../utils/models/procedures/m_BarData";
+import m_PieData from "../../utils/models/procedures/m_PieData";
+
+
 import {
     Chart as ChartJS,
     ArcElement,
@@ -28,6 +35,11 @@ function Statistic () {
     const monthNames = ["January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
+    const notificationCtx = useContext(NotificationContext);
+
+
+    const PieData = new m_PieData();
+    const BarData = new m_BarData();
 
     useEffect(() => {
         // Load transactionIntermediates, Groups
@@ -38,32 +50,25 @@ function Statistic () {
         // Test       | 245    | JUN   |
         // Gockel     | 150    | MAI   |
 
-        const fetchData = async () => {
-            // TransactionIntermediates (we only want the amount per group)
-            // 
-            setLoading(true)
-            await axiosInstance
-                .get('api/statistics/')
-                .then( res => {
-                    console.log(res);
-                    setStatisticData(res.data);
-                })
-            
-            let payload = {
-                "id": accountId-1,
+
+        const initialize = async () => {
+            try {
+                setLoading(true)
+                await PieData.m_PieData_runProcedure(accountId-1);
+                await BarData.m_BarData_runProcedure(accountId-1);
+
+                //Set States:
+                setStatisticData(PieData.m_PieData_Data);
+                setBarData(BarData.m_BarData_Data);
+            } catch (error) {
+                console.log(error);
+                notificationCtx.error(error);
+            } finally {
+                setLoading(false)
             }
-
-            await axiosInstance
-                .post('api/bank/getbardata/', payload)
-                .then( res => {
-                    console.log(res);
-                    setBarData(res.data)
-                })
-            setLoading(false)
-
         }
 
-        fetchData()
+        initialize()
     }, [])
 
 
@@ -97,7 +102,7 @@ function Statistic () {
                 console.log(barData[index])
                 
                 // Month
-                arr.push(<div key="123">{monthNames[date.getMonth()] + " " + date.getFullYear()}</div>)
+                arr.push(<div key={monthNames[date.getMonth()] + date.getFullYear }>{monthNames[date.getMonth()] + " " + date.getFullYear()}</div>)
                 
                 // Build Pie Data
                 el.group.forEach((group) => {
@@ -133,6 +138,12 @@ function Statistic () {
                 )
                 
             })
+        }else {
+            arr.push(
+                <div>
+                    Building your Statistic-Data...
+                </div>
+            )
         }
         return arr
     }

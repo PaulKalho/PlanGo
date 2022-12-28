@@ -8,9 +8,9 @@ router = DefaultRouter()
 router.register('outcome', FixOutcomeView, basename="outcome")
 router.register('income', FixIncomeView, basename="income")
 router.register('group', GroupView, basename="group")
-router.register('transactionGroup', TransactionGroupIntermediateView, basename="trcgroupintermediate")
+router.register('trcgrpinterm', TransactionGroupIntermediateView, basename="trcgroupintermediate")
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('statistics/', getPieData),
+    path('piedata/', getPieData),
 ]

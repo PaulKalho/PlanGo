@@ -21,5 +21,5 @@ urlpatterns = [
     path('transactions/', list_transactions,name="transactions"),
     path('checkacc/', check_accounts, name="checkacc"),
     path('budget/', budget, name="budget"),
-    path('getbardata/', getBarData, name="barData")
+    path('bardata/', getBarData, name="barData")
 ]
