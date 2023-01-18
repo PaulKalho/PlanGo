@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import { BsFillPieChartFill, BsArrowBarRight } from "react-icons/bs"
+import { BsFillPieChartFill, BsArrowBarRight, BsFillEyeFill, BsFillEyeSlashFill, BsAsterisk } from "react-icons/bs"
 import {Link} from "react-router-dom"
 
 //Models:
@@ -10,13 +10,19 @@ export default class Overview extends Component {
   
   constructor(props) {
     super(props);
+    this.hideAll = this.hideAll.bind(this);
+
     this.state = {
       // Models:
       FixOutcome: new m_FixOutcome(),
       FixIncome: new m_FixIncome(),
       //Other States
-      loading: false
     }
+  }
+  
+  hideAll() {
+    console.log(this.props.hidden);
+    this.props.setHidden(!this.props.hidden);
   }
 
   async componentDidMount() {
@@ -38,13 +44,13 @@ export default class Overview extends Component {
         <div className="p-5 border-black ">
           <div className="border p-5 flex flex-col text-center rounded-md bg-red-400">
               <h1>Fixe Ausgaben:</h1>
-              <div className="font-bold">{this.state.FixOutcome.m_FixOutcome_Sum()}</div>
+              <div className="font-bold mx-auto">{this.props.hidden ? <BsAsterisk /> : this.state.FixOutcome.m_FixOutcome_Sum()}</div>
           </div>
         </div>
         <div className="p-5 border-black">
             <div className="border p-5 flex flex-col text-center rounded-md bg-green-400">
                 <h1>Fixe Einnahmen:</h1>
-                <div className="font-bold">{this.state.FixIncome.m_FixIncome_Sum()}</div>
+                <div className="font-bold mx-auto">{this.props.hidden ? <BsAsterisk /> : this.state.FixIncome.m_FixIncome_Sum()}</div>
             </div>
         </div>
         <Link to="statistik" className="p-5 border-black">
@@ -54,10 +60,15 @@ export default class Overview extends Component {
             </div>
         </Link>
         <div className="p-5 border-black">
-          <div className="border p-5 flex-col text-center rounded-md">
+          <div className="border p-5 flex flex-col text-center rounded-md">
             <h1>Restbudget pro Tag:</h1>
-            <div className="font-bold">{this.props.budget}</div>
+            <div className="font-bold mx-auto">{this.props.hidden ? <BsAsterisk /> : this.props.budget}</div>
           </div>
+        </div>
+        <div className="hideButton">
+          <button onClick={this.hideAll}>
+            {this.props.hidden ? <BsFillEyeFill size={25} /> : <BsFillEyeSlashFill size={25} />  }
+          </button>
         </div>
       </div>
     )

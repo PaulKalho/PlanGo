@@ -20,6 +20,7 @@ function BankingMain() {
     const [transactions, setTransactions] = useState([])
     const [categories, setCategories] = useState([])
     const [budget, setBudget] = useState()
+    const [hidden, setHidden] = useState(true)
     const notificationCtx = useContext(NotificationContext);
 
     //Modells:
@@ -67,8 +68,8 @@ function BankingMain() {
                     Transaktionen
                 </Link>
             </Breadcrumbs>
-            <Overview budget={budget}/>
-            <TransactionList transactions={transactions} loading={loading} categories={categories} setCategories={setCategories}/>
+            <Overview budget={budget} hidden={hidden} setHidden={setHidden}/>
+            <TransactionList transactions={transactions} loading={loading} categories={categories} setCategories={setCategories} hidden={hidden}/>
         </div>
     )
 
