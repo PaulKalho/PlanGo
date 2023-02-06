@@ -34,7 +34,7 @@ def get_link(request):
     """
     response = Response()
 
-    response = nordigen.getLink()
+    response = nordigen.getLink(request)
 
     return response
 @api_view(('POST',))
